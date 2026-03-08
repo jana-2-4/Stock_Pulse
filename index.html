@@ -938,34 +938,36 @@ input:checked + .tslider::before{transform:translateX(19px);}
 }
 
 /* Desktop hover popup for news */
-@media(hover:hover) and (pointer:fine){
+@media(hover:hover) and (pointer:fine){\
   .news-card{cursor:default;}
   .news-card .nc-title{cursor:pointer;transition:color 0.2s;}
   .news-card .nc-title:hover{color:var(--accent);}
-  .desktop-popup{
-    position:fixed;z-index:600;
-    background:var(--bg2);
-    border:1.5px solid var(--border);
-    border-radius:16px;
-    padding:18px;
-    width:310px;
-    box-shadow:0 12px 40px rgba(0,0,0,0.55);
-    pointer-events:all;
-    animation:popIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  @keyframes popIn{from{opacity:0;transform:scale(0.9);}to{opacity:1;transform:scale(1);}}
-  .dp-source{font-size:0.6rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
-  .dp-title{
-    font-family:'Rajdhani',sans-serif;
-    font-size:0.95rem;font-weight:700;line-height:1.4;
-    margin-bottom:8px;cursor:pointer;
-    transition:color 0.2s;
-  }
-  .dp-title:hover{color:var(--accent);text-decoration:underline;}
-  .dp-excerpt{font-size:0.72rem;color:var(--text2);line-height:1.5;margin-bottom:10px;}
-  .dp-bottom{display:flex;align-items:center;justify-content:space-between;}
-  .dp-hint{font-size:0.6rem;color:var(--text2);font-style:italic;}
 }
+
+/* Shared popup styles — used by both desktop hover and mobile tap */
+.desktop-popup{
+  position:fixed;z-index:600;
+  background:var(--bg2);
+  border:1.5px solid var(--border);
+  border-radius:16px;
+  padding:18px;
+  width:310px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.55);
+  pointer-events:all;
+  animation:popIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes popIn{from{opacity:0;transform:scale(0.9);}to{opacity:1;transform:scale(1);}}
+.dp-source{font-size:0.6rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.dp-title{
+  font-family:'Rajdhani',sans-serif;
+  font-size:0.95rem;font-weight:700;line-height:1.4;
+  margin-bottom:8px;cursor:pointer;
+  transition:color 0.2s;
+}
+.dp-title:hover{color:var(--accent);text-decoration:underline;}
+.dp-excerpt{font-size:0.72rem;color:var(--text2);line-height:1.5;margin-bottom:10px;}
+.dp-bottom{display:flex;align-items:center;justify-content:space-between;}
+.dp-hint{font-size:0.6rem;color:var(--text2);font-style:italic;}
 .news-modal-overlay{
   position:fixed;inset:0;z-index:500;
   background:rgba(6,8,16,0.85);
@@ -2497,7 +2499,6 @@ window.handleCardClick = function(e, card){
 };
 
 function showMobilePopup(n){
-  // Remove any existing
   document.getElementById('mobilePopup')?.remove();
   document.getElementById('mobilePopupOverlay')?.remove();
 
@@ -2509,17 +2510,11 @@ function showMobilePopup(n){
   overlay.style.cssText = 'position:fixed;inset:0;z-index:590;background:rgba(0,0,0,0.45);';
   overlay.onclick = ()=>{ overlay.remove(); document.getElementById('mobilePopup')?.remove(); };
 
-  // Popup — same look as desktop popup but centered
+  // Centered popup — reuses desktop-popup class (now global CSS)
   const popup = document.createElement('div');
   popup.id = 'mobilePopup';
   popup.className = 'desktop-popup';
-  popup.style.cssText = `
-    position:fixed;z-index:600;
-    left:50%;top:50%;
-    transform:translate(-50%,-50%);
-    width:min(320px, calc(100vw - 32px));
-    cursor:pointer;
-  `;
+  popup.style.cssText = 'left:50%;top:50%;transform:translate(-50%,-50%);width:min(320px,calc(100vw - 32px));cursor:pointer;';
   popup.innerHTML = `
     <div class="dp-source">${n.source} · ${fmtTime(n.time)}</div>
     <div class="dp-title">${n.title}</div>
@@ -2530,7 +2525,7 @@ function showMobilePopup(n){
     </div>`;
 
   // Tap popup → open article
-  popup.onclick = (e)=>{
+  popup.onclick = e=>{
     e.stopPropagation();
     overlay.remove();
     popup.remove();
