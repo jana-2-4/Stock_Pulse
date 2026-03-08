@@ -2522,38 +2522,61 @@ function showMobilePopup(n){
   document.getElementById('mobilePopupOverlay')?.remove();
 
   const sent = n.sentiment||getSentiment(n.title);
+  const sentColor = sent==='bullish'?'#00e65a':sent==='bearish'?'#ff1744':'#8899b4';
 
   // Dim overlay — tap outside to close
   const overlay = document.createElement('div');
   overlay.id = 'mobilePopupOverlay';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:590;background:rgba(0,0,0,0.45);';
-  overlay.onclick = ()=>{ overlay.remove(); document.getElementById('mobilePopup')?.remove(); };
+  Object.assign(overlay.style, {
+    position:'fixed', inset:'0', zIndex:'590',
+    background:'rgba(0,0,0,0.5)'
+  });
+  overlay.onclick = ()=>closeMP();
 
-  // Centered popup — reuses desktop-popup class (now global CSS)
+  // Popup — fully self-contained styles, no class
   const popup = document.createElement('div');
   popup.id = 'mobilePopup';
-  popup.className = 'desktop-popup';
-  // Use !important via a style tag to guarantee centering overrides class CSS
-  const styleTag = document.getElementById('mobilePopupStyle') || document.createElement('style');
-  styleTag.id = 'mobilePopupStyle';
-  styleTag.textContent = '#mobilePopup{position:fixed!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;width:min(310px,calc(100vw - 32px))!important;cursor:pointer;}';
-  document.head.appendChild(styleTag);
+  Object.assign(popup.style, {
+    position:'fixed',
+    top:'50%',
+    left:'50%',
+    transform:'translate(-50%,-50%)',
+    width:'calc(100vw - 40px)',
+    maxWidth:'340px',
+    zIndex:'600',
+    background:'var(--bg2)',
+    border:'1.5px solid var(--border)',
+    borderRadius:'16px',
+    padding:'18px',
+    boxShadow:'0 16px 48px rgba(0,0,0,0.6)',
+    cursor:'pointer',
+    animation:'popIn 0.2s cubic-bezier(0.34,1.56,0.64,1)'
+  });
+
   popup.innerHTML = `
-    <div class="dp-source">${n.source} · ${fmtTime(n.time)}</div>
-    <div class="dp-title">${n.title}</div>
-    <div class="dp-excerpt">${n.excerpt||''}</div>
-    <div class="dp-bottom">
-      <span class="sentiment-badge ${sent}" style="font-size:0.65rem">${sentimentEmoji(sent)}</span>
-      <span style="font-size:0.65rem;color:var(--accent);font-weight:600;">Tap to open →</span>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+      <span style="font-size:0.6rem;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:1px;">${n.source}</span>
+      <button onclick="event.stopPropagation();closeMP()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:8px;">✕</button>
+    </div>
+    <div style="font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;line-height:1.4;margin-bottom:8px;color:var(--text);">${n.title}</div>
+    <div style="font-size:0.73rem;color:var(--text2);line-height:1.5;margin-bottom:12px;">${n.excerpt||''}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:0.7rem;font-weight:600;color:${sentColor};">${sentimentEmoji(sent)} ${sent.charAt(0).toUpperCase()+sent.slice(1)}</span>
+      <span style="font-size:0.68rem;color:var(--accent);font-weight:600;">Tap to open →</span>
     </div>`;
 
-  // Tap popup → open article
+  // Tap popup body → open article
   popup.onclick = e=>{
     e.stopPropagation();
-    overlay.remove();
-    popup.remove();
+    closeMP();
     openRealArticle(n.url||'', n.title||'', n.stock||'');
   };
+
+  function closeMP(){
+    document.getElementById('mobilePopupOverlay')?.remove();
+    document.getElementById('mobilePopup')?.remove();
+  }
+  window.closeMP = closeMP;
 
   document.body.appendChild(overlay);
   document.body.appendChild(popup);
