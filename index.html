@@ -2489,12 +2489,57 @@ function isTouchDevice(){
   return window.matchMedia('(hover:none) and (pointer:coarse)').matches;
 }
 
-// Mobile: tap card → open article directly (no modal middleman)
+// Mobile: tap card → centered popup (same as desktop popup but centered)
 window.handleCardClick = function(e, card){
   if(!isTouchDevice()) return; // desktop uses hover
   const n=JSON.parse(decodeURIComponent(card.dataset.news));
-  openRealArticle(n.url||'', n.title||'', n.stock||'');
+  showMobilePopup(n);
 };
+
+function showMobilePopup(n){
+  // Remove any existing
+  document.getElementById('mobilePopup')?.remove();
+  document.getElementById('mobilePopupOverlay')?.remove();
+
+  const sent = n.sentiment||getSentiment(n.title);
+
+  // Dim overlay — tap outside to close
+  const overlay = document.createElement('div');
+  overlay.id = 'mobilePopupOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:590;background:rgba(0,0,0,0.45);';
+  overlay.onclick = ()=>{ overlay.remove(); document.getElementById('mobilePopup')?.remove(); };
+
+  // Popup — same look as desktop popup but centered
+  const popup = document.createElement('div');
+  popup.id = 'mobilePopup';
+  popup.className = 'desktop-popup';
+  popup.style.cssText = `
+    position:fixed;z-index:600;
+    left:50%;top:50%;
+    transform:translate(-50%,-50%);
+    width:min(320px, calc(100vw - 32px));
+    cursor:pointer;
+  `;
+  popup.innerHTML = `
+    <div class="dp-source">${n.source} · ${fmtTime(n.time)}</div>
+    <div class="dp-title">${n.title}</div>
+    <div class="dp-excerpt">${n.excerpt||''}</div>
+    <div class="dp-bottom">
+      <span class="sentiment-badge ${sent}" style="font-size:0.65rem">${sentimentEmoji(sent)}</span>
+      <span style="font-size:0.65rem;color:var(--accent);font-weight:600;">Tap to open →</span>
+    </div>`;
+
+  // Tap popup → open article
+  popup.onclick = (e)=>{
+    e.stopPropagation();
+    overlay.remove();
+    popup.remove();
+    openRealArticle(n.url||'', n.title||'', n.stock||'');
+  };
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(popup);
+}
 
 // Desktop: hover card title → side popup
 let hoverTimeout=null;
