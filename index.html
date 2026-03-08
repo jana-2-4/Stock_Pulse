@@ -2588,27 +2588,32 @@ function showMobilePopup(n){
   // Overlay
   const overlay = document.createElement('div');
   overlay.id = 'mobilePopupOverlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9998;background:rgba(0,0,0,0.5);';
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.right = '0';
+  overlay.style.bottom = '0';
+  overlay.style.zIndex = '9998';
+  overlay.style.background = 'rgba(0,0,0,0.55)';
   overlay.onclick = ()=>closeMP();
 
-  // Popup — all hardcoded resolved colors, no CSS vars
+  // Popup
   const popup = document.createElement('div');
   popup.id = 'mobilePopup';
-  popup.style.cssText = `
-    position:fixed;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    width:calc(100vw - 40px);
-    max-width:340px;
-    z-index:9999;
-    background:${bgColor};
-    border:1.5px solid ${borderColor};
-    border-radius:16px;
-    padding:16px;
-    box-shadow:0 16px 48px rgba(0,0,0,0.35);
-    cursor:pointer;
-  `;
+  popup.style.position = 'fixed';
+  popup.style.top = '50%';
+  popup.style.left = '50%';
+  popup.style.transform = 'translate(-50%,-50%)';
+  popup.style.width = 'calc(100vw - 40px)';
+  popup.style.maxWidth = '340px';
+  popup.style.zIndex = '9999';
+  popup.style.background = bgColor;
+  popup.style.border = '1.5px solid ' + borderColor;
+  popup.style.borderRadius = '16px';
+  popup.style.padding = '16px';
+  popup.style.boxSizing = 'border-box';
+  popup.style.boxShadow = '0 16px 48px rgba(0,0,0,0.4)';
+  popup.style.cursor = 'pointer';
 
   popup.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
@@ -2673,12 +2678,14 @@ function showDesktopPopup(e, card, n){
   popup.className='desktop-popup';
   popup.id='desktopPopup';
   popup.innerHTML=`
-    <div class="dp-source">${n.source} · ${fmtTime(n.time)}</div>
-    <div class="dp-title" onclick="openArticleDirectly('${encodeURIComponent(n.url||'')}','${encodeURIComponent(n.title)}','${encodeURIComponent(n.stock||'')}')" title="Click to open article">${n.title}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div class="dp-source" style="margin-bottom:0">${n.source} · ${fmtTime(n.time)}</div>
+      <button onclick="event.stopPropagation();document.getElementById('desktopPopup')?.remove()" style="background:#e8edf5;border:none;color:#5a6a85;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:0.7rem;line-height:22px;text-align:center;flex-shrink:0;margin-left:8px;">✕</button>
+    </div>
+    <div class="dp-title" onclick="openArticleDirectly('${encodeURIComponent(n.url||'')}','${encodeURIComponent(n.title)}','${encodeURIComponent(n.stock||'')}')">${n.title}</div>
     <div class="dp-excerpt">${n.excerpt}</div>
     <div class="dp-bottom">
       <span class="sentiment-badge ${sent}" style="font-size:0.65rem">${sentimentEmoji(sent)}</span>
-      
     </div>`;
 
   // Add to DOM first so we can measure it
