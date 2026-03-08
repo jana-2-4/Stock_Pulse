@@ -1605,7 +1605,7 @@ const state = {
   user:null, portfolio:[], watchlist:[],
   portNews:[], watchNews:[], overallNews:[],
   filters:{'port-news':'all','watch-news':'all','overall':'all'},
-  overallTab:'my', theme:'dark',
+  overallTab:'my', theme:'light',
 };
 
 // ================================================================
@@ -1680,11 +1680,11 @@ async function loadFirebaseUser(user) {
     state.user={...data, uid:user.uid};
     state.portfolio=data.portfolio||[];
     state.watchlist=data.watchlist||[];
-    state.portNews=(data.portNews||[]).filter(n=>n.sourceKey!=='ph').map(n=>({...n,sentiment:n.sentiment||getSentiment(n.title)}));
-    state.watchNews=(data.watchNews||[]).filter(n=>n.sourceKey!=='ph').map(n=>({...n,sentiment:n.sentiment||getSentiment(n.title)}));
+    state.portNews  = pruneOldNews((data.portNews||[]).filter(n=>n.sourceKey!=='ph').map(n=>({...n,sentiment:n.sentiment||getSentiment(n.title)})), MAX_IN_MEMORY);
+    state.watchNews = pruneOldNews((data.watchNews||[]).filter(n=>n.sourceKey!=='ph').map(n=>({...n,sentiment:n.sentiment||getSentiment(n.title)})), MAX_IN_MEMORY);
 
     // Apply saved theme first so UI looks right
-    const savedTheme=localStorage.getItem('sp_theme')||'dark';
+    const savedTheme=localStorage.getItem('sp_theme')||'light';
     state.theme=savedTheme;
     applyTheme();
 
@@ -1731,15 +1731,36 @@ function hideSplash(){
   setTimeout(()=>s.style.display='none',700);
 }
 
+// ── News storage limits ──────────────────────────────────────
+// Keep only fresh news — drop anything older than 24 hours
+// Hard caps: 50 portNews, 50 watchNews saved to Firebase
+const MAX_NEWS_AGE_MS  = 24 * 60 * 60 * 1000; // 24 hours
+const MAX_PORT_SAVED   = 50;
+const MAX_WATCH_SAVED  = 50;
+const MAX_IN_MEMORY    = 100; // per category in RAM
+
+function pruneOldNews(arr, maxCount){
+  const cutoff = Date.now() - MAX_NEWS_AGE_MS;
+  return arr
+    .filter(n => (n.time||0) > cutoff)   // drop news older than 24h
+    .slice(0, maxCount);                  // hard cap
+}
+
 async function saveToFirebase(){
   if(!state.user?.uid) return;
   try {
+    // Prune before saving — keeps Firebase lean
+    const portToSave  = pruneOldNews(state.portNews,  MAX_PORT_SAVED);
+    const watchToSave = pruneOldNews(state.watchNews, MAX_WATCH_SAVED);
     await updateDoc(doc(db,'users',state.user.uid),{
-      portfolio:state.portfolio,
-      watchlist:state.watchlist,
-      portNews:state.portNews.slice(0,80),
-      watchNews:state.watchNews.slice(0,80),
+      portfolio:  state.portfolio,
+      watchlist:  state.watchlist,
+      portNews:   portToSave,
+      watchNews:  watchToSave,
     });
+    // Also trim in-memory to avoid RAM bloat
+    state.portNews  = pruneOldNews(state.portNews,  MAX_IN_MEMORY);
+    state.watchNews = pruneOldNews(state.watchNews, MAX_IN_MEMORY);
   } catch(e){ console.error('Save error:',e); }
 }
 
@@ -2468,11 +2489,11 @@ function isTouchDevice(){
   return window.matchMedia('(hover:none) and (pointer:coarse)').matches;
 }
 
-// Mobile: tap card → bottom sheet modal
+// Mobile: tap card → open article directly (no modal middleman)
 window.handleCardClick = function(e, card){
   if(!isTouchDevice()) return; // desktop uses hover
   const n=JSON.parse(decodeURIComponent(card.dataset.news));
-  openNewsModal(n);
+  openRealArticle(n.url||'', n.title||'', n.stock||'');
 };
 
 // Desktop: hover card title → side popup
@@ -2977,6 +2998,10 @@ setInterval(async()=>{
 // SPLASH — show until auth state resolves
 // ================================================================
 window.addEventListener('load',()=>{
+  // Apply theme immediately to avoid flash of dark theme
+  const savedTheme = localStorage.getItem('sp_theme') || 'light';
+  state.theme = savedTheme;
+  applyTheme();
   // Splash stays visible until onAuthStateChanged fires
   setTimeout(()=>{
     // If auth hasn't resolved in 5s, show login
