@@ -1,0 +1,2991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#0b0f1a">
+<title>StockPulse — Track · Sense · React</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   THEME VARIABLES
+============================================================ */
+:root {
+  --bg:        #0b0f1a;
+  --bg2:       #111827;
+  --surface:   #161d2e;
+  --surface2:  #1e2840;
+  --border:    #253047;
+  --accent:    #00e5ff;
+  --accent2:   #ff6d3b;
+  --accent3:   #7c4dff;
+  --green:     #00e676;
+  --red:       #ff1744;
+  --yellow:    #ffd600;
+  --text:      #e8edf5;
+  --text2:     #8899b4;
+  --shadow:    rgba(0,229,255,0.15);
+}
+body.light {
+  --bg:        #f0f4f8;
+  --bg2:       #ffffff;
+  --surface:   #ffffff;
+  --surface2:  #e8edf5;
+  --border:    #d0d9e8;
+  --accent:    #0077ff;
+  --accent2:   #ff5722;
+  --accent3:   #6200ea;
+  --green:     #00897b;
+  --red:       #e53935;
+  --yellow:    #f9a825;
+  --text:      #1a2340;
+  --text2:     #5a6a85;
+  --shadow:    rgba(0,119,255,0.12);
+}
+
+/* ============================================================
+   RESET & BASE
+============================================================ */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;min-height:100vh;overflow-x:hidden;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'IBM Plex Mono',monospace;
+  transition:background 0.4s,color 0.4s;
+  max-width:480px;
+  margin:0 auto;
+  position:relative;
+}
+
+/* ============================================================
+   SPLASH SCREEN — PULSE GRID CONCEPT
+============================================================ */
+#splash{
+  position:fixed;inset:0;z-index:9999;
+  background:#060810;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:0;overflow:hidden;
+}
+
+/* Animated grid background */
+.splash-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px);
+  background-size:32px 32px;
+  animation:gridDrift 8s linear infinite;
+}
+@keyframes gridDrift{
+  0%{transform:translateY(0);}
+  100%{transform:translateY(32px);}
+}
+
+/* Glow orb */
+.splash-orb{
+  position:absolute;
+  width:300px;height:300px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(0,229,255,0.12) 0%, rgba(124,77,255,0.06) 40%, transparent 70%);
+  animation:orbPulse 3s ease-in-out infinite;
+}
+@keyframes orbPulse{
+  0%,100%{transform:scale(1);opacity:0.6;}
+  50%{transform:scale(1.15);opacity:1;}
+}
+
+/* ---- THE UNIQUE LOGO MARK ---- */
+.splash-mark{
+  position:relative;z-index:2;
+  margin-bottom:24px;
+  width:100px;height:100px;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* SVG pulse-grid icon drawn with CSS */
+.pulse-grid-icon{
+  width:88px;height:88px;
+  position:relative;
+}
+.pulse-grid-icon svg{
+  width:100%;height:100%;
+  overflow:visible;
+  filter:drop-shadow(0 0 16px rgba(0,229,255,0.6));
+  animation:iconGlow 2s ease-in-out infinite;
+}
+@keyframes iconGlow{
+  0%,100%{filter:drop-shadow(0 0 12px rgba(0,229,255,0.5));}
+  50%{filter:drop-shadow(0 0 28px rgba(0,229,255,0.9));}
+}
+
+/* Scan line animation on icon */
+.icon-scan{
+  position:absolute;
+  left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(0,229,255,0.8),transparent);
+  top:0;
+  animation:scanDown 2.5s ease-in-out infinite;
+  border-radius:2px;
+}
+@keyframes scanDown{
+  0%{top:0%;opacity:0;}
+  10%{opacity:1;}
+  90%{opacity:1;}
+  100%{top:100%;opacity:0;}
+}
+
+/* ---- LOGO NAME ---- */
+.splash-wordmark{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;
+  align-items:flex-start;
+  line-height:1;
+  margin-bottom:8px;
+}
+.splash-stk{
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:300;
+  font-size:1rem;
+  letter-spacing:8px;
+  color:rgba(232,237,245,0.5);
+  text-transform:uppercase;
+  opacity:0;
+  animation:fadeIn 0.5s ease 0.8s forwards;
+}
+.splash-pulse-word{
+  font-family:'Rajdhani',sans-serif;
+  font-weight:700;
+  font-size:3rem;
+  letter-spacing:-1px;
+  line-height:1;
+  background:linear-gradient(90deg, #e8edf5 0%, #00e5ff 50%, #7c4dff 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  opacity:0;
+  transform:translateX(-8px);
+  animation:slideRight 0.6s ease 1s forwards;
+}
+@keyframes slideRight{to{opacity:1;transform:translateX(0);}}
+
+.splash-tagline{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.62rem;
+  color:rgba(136,153,180,0.6);
+  letter-spacing:4px;
+  text-transform:uppercase;
+  margin-top:14px;
+  position:relative;z-index:2;
+  opacity:0;
+  animation:fadeIn 0.6s ease 1.4s forwards;
+}
+
+/* Progress bar */
+.splash-bar{
+  position:absolute;bottom:48px;
+  width:120px;height:1px;
+  background:rgba(255,255,255,0.08);
+  border-radius:2px;
+  overflow:hidden;
+}
+.splash-bar-fill{
+  height:100%;
+  background:linear-gradient(90deg,#00e5ff,#7c4dff);
+  border-radius:2px;
+  animation:loadBar 2.4s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+@keyframes loadBar{0%{width:0%;}100%{width:100%;}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+/* letter animation kept for compat */
+.splash-name span{display:inline-block;opacity:0;transform:translateY(20px);animation:letterUp 0.5s ease forwards;}
+@keyframes letterUp{to{opacity:1;transform:translateY(0);}}
+
+/* ============================================================
+   AUTH SCREEN
+============================================================ */
+#auth{
+  display:none;
+  min-height:100vh;
+  padding:0 24px 40px;
+  flex-direction:column;
+}
+.auth-header{
+  padding:60px 0 40px;
+  text-align:center;
+}
+.auth-logo{
+  display:inline-flex;flex-direction:column;align-items:center;
+  gap:4px;margin-bottom:32px;
+}
+.auth-logo-icon{
+  width:56px;height:56px;
+  border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,229,255,0.06);
+  border:1.5px solid rgba(0,229,255,0.2);
+  margin-bottom:4px;
+}
+.auth-logo-icon svg{
+  width:36px;height:36px;
+  filter:drop-shadow(0 0 8px rgba(0,229,255,0.5));
+}
+.auth-logo-name{
+  display:flex;flex-direction:column;align-items:center;
+  line-height:1;
+}
+.auth-logo-stk{
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:300;font-size:0.62rem;
+  letter-spacing:6px;color:var(--text2);
+  text-transform:uppercase;
+}
+.auth-logo-pulse{
+  font-family:'Rajdhani',sans-serif;
+  font-weight:700;font-size:1.6rem;
+  letter-spacing:-0.5px;
+  background:linear-gradient(90deg,var(--text) 0%,var(--accent) 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.auth-title{
+  font-family:'Rajdhani',sans-serif;
+  font-size:1.6rem;font-weight:700;
+  margin-bottom:6px;
+}
+.auth-sub{font-size:0.72rem;color:var(--text2);}
+
+.auth-tabs{
+  display:flex;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:4px;
+  margin-bottom:24px;
+}
+.auth-tab{
+  flex:1;padding:10px;
+  border:none;background:none;
+  color:var(--text2);
+  font-family:'Rajdhani',sans-serif;
+  font-size:0.95rem;font-weight:600;
+  border-radius:9px;
+  cursor:pointer;transition:all 0.2s;
+}
+.auth-tab.active{
+  background:var(--accent);color:#000;
+}
+
+.form-group{margin-bottom:14px;}
+.form-label{
+  display:block;
+  font-size:0.68rem;
+  color:var(--text2);
+  letter-spacing:1px;
+  text-transform:uppercase;
+  margin-bottom:6px;
+}
+.form-input{
+  width:100%;
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  color:var(--text);
+  padding:13px 16px;
+  border-radius:12px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.85rem;
+  transition:border-color 0.2s,box-shadow 0.2s;
+}
+.form-input:focus{
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(0,229,255,0.1);
+}
+.form-input::placeholder{color:var(--text2);font-size:0.8rem;}
+
+.auth-btn{
+  width:100%;
+  background:linear-gradient(135deg,var(--accent),var(--accent3));
+  color:#000;border:none;
+  padding:14px;border-radius:12px;
+  font-family:'Rajdhani',sans-serif;
+  font-size:1rem;font-weight:700;
+  letter-spacing:1px;
+  cursor:pointer;margin-top:6px;
+  transition:all 0.2s;
+  position:relative;overflow:hidden;
+}
+.auth-btn:active{transform:scale(0.98);}
+.auth-btn::after{
+  content:'';position:absolute;inset:0;
+  background:rgba(255,255,255,0.15);
+  opacity:0;transition:opacity 0.2s;
+}
+.auth-btn:hover::after{opacity:1;}
+
+.auth-error{
+  background:rgba(255,23,68,0.1);
+  border:1px solid rgba(255,23,68,0.3);
+  color:var(--red);
+  padding:10px 14px;border-radius:8px;
+  font-size:0.75rem;margin-top:10px;
+  display:none;
+}
+
+/* ============================================================
+   MAIN APP
+============================================================ */
+#app{display:none;padding-bottom:72px;}
+
+/* Header */
+.app-header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(11,15,26,0.95);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:12px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+body.light .app-header{background:rgba(240,244,248,0.95);}
+.header-logo{
+  display:flex;align-items:center;gap:10px;
+}
+.header-logo-icon{
+  width:34px;height:34px;
+  border-radius:9px;
+  background:rgba(0,229,255,0.07);
+  border:1px solid rgba(0,229,255,0.2);
+  display:flex;align-items:center;justify-content:center;
+}
+.header-logo-icon svg{
+  width:22px;height:22px;
+  filter:drop-shadow(0 0 4px rgba(0,229,255,0.5));
+}
+.header-logo-name{
+  display:flex;flex-direction:column;line-height:1;
+}
+.header-logo-stk{
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:300;font-size:0.5rem;
+  letter-spacing:4px;color:var(--text2);
+  text-transform:uppercase;
+}
+.header-logo-pulse{
+  font-family:'Rajdhani',sans-serif;
+  font-weight:700;font-size:1rem;letter-spacing:-0.3px;
+  background:linear-gradient(90deg,var(--text) 0%,var(--accent) 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.header-right{display:flex;align-items:center;gap:8px;}
+.icon-btn{
+  width:36px;height:36px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:1rem;
+  transition:all 0.2s;
+  border:none;
+}
+.icon-btn:active{background:var(--surface2);}
+.live-pill{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(0,230,118,0.1);
+  border:1px solid rgba(0,230,118,0.25);
+  border-radius:20px;padding:4px 10px;
+  font-size:0.6rem;color:var(--green);font-weight:600;
+  letter-spacing:1px;
+}
+.live-dot{
+  width:5px;height:5px;background:var(--green);
+  border-radius:50%;animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+/* Bottom Nav */
+.bottom-nav{
+  position:fixed;bottom:0;
+  left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  display:flex;z-index:100;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:9px 0 7px;
+  border:none;background:none;
+  color:var(--text2);cursor:pointer;
+  font-family:'Rajdhani',sans-serif;
+  font-size:0.6rem;font-weight:600;
+  letter-spacing:0.5px;text-transform:uppercase;
+  gap:3px;transition:color 0.2s;
+  position:relative;
+}
+.nav-btn .nav-icon{font-size:1.15rem;}
+.nav-btn.active{color:var(--accent);}
+.nav-btn.active::before{
+  content:'';
+  position:absolute;top:0;left:50%;
+  transform:translateX(-50%);
+  width:24px;height:2px;
+  background:var(--accent);
+  border-radius:0 0 4px 4px;
+}
+
+/* Pages */
+.page{display:none;padding:16px;animation:pageIn 0.3s ease;}
+.page.active{display:block;}
+@keyframes pageIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* ============================================================
+   DASHBOARD / HOME
+============================================================ */
+.greeting{
+  margin-bottom:20px;
+}
+.greeting-hi{
+  font-size:0.7rem;color:var(--text2);
+  letter-spacing:1px;text-transform:uppercase;
+}
+.greeting-name{
+  font-family:'Clash Display',sans-serif;
+  font-size:1.5rem;font-weight:700;
+  margin-top:2px;
+}
+.greeting-name span{color:var(--accent);}
+
+.summary-cards{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:10px;margin-bottom:20px;
+}
+.sum-card{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:16px;padding:14px;
+  position:relative;overflow:hidden;
+  transition:border-color 0.2s, transform 0.15s;
+}
+.sum-card:active{ transform:scale(0.96); border-color:var(--accent); }
+.sum-card::before{
+  content:'';position:absolute;
+  top:-20px;right:-20px;
+  width:60px;height:60px;
+  border-radius:50%;
+  opacity:0.06;
+}
+.sum-card.c1::before{background:var(--accent);}
+.sum-card.c2::before{background:var(--green);}
+.sum-card.c3::before{background:var(--accent2);}
+.sum-card.c4::before{background:var(--accent3);}
+.sum-label{font-size:0.6rem;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.sum-value{
+  font-family:'Clash Display',sans-serif;
+  font-size:1.6rem;font-weight:700;letter-spacing:-0.5px;
+}
+.sum-value.ca{color:var(--accent);}
+.sum-value.cg{color:var(--green);}
+.sum-value.co{color:var(--accent2);}
+.sum-value.cp{color:var(--accent3);}
+
+.section-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;
+}
+.section-title{
+  font-family:'Rajdhani',sans-serif;
+  font-size:0.75rem;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--text2);
+}
+.see-all{
+  font-size:0.68rem;color:var(--accent);
+  cursor:pointer;background:none;border:none;
+  font-family:'IBM Plex Mono',monospace;
+}
+
+/* ============================================================
+   STOCK CARDS (Portfolio / Watchlist)
+============================================================ */
+.stocks-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+
+.stock-card{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:14px;
+  padding:14px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  animation:slideIn 0.3s ease;
+  transition:border-color 0.2s;
+}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px);}to{opacity:1;transform:translateX(0);}}
+.stock-card:active{border-color:var(--accent);}
+
+.sc-info{display:flex;flex-direction:column;gap:3px;}
+.sc-sym{
+  font-family:'Clash Display',sans-serif;
+  font-size:1rem;font-weight:700;letter-spacing:0.5px;
+}
+.sc-name{font-size:0.65rem;color:var(--text2);}
+.sc-sector{
+  display:inline-block;
+  background:rgba(124,77,255,0.12);
+  border:1px solid rgba(124,77,255,0.2);
+  color:var(--accent3);
+  padding:1px 8px;border-radius:4px;
+  font-size:0.58rem;font-weight:600;
+  margin-top:3px;
+}
+.sc-right{display:flex;align-items:center;gap:10px;}
+.sc-news{
+  background:rgba(0,229,255,0.1);
+  border:1px solid rgba(0,229,255,0.2);
+  color:var(--accent);
+  padding:3px 10px;border-radius:20px;
+  font-size:0.65rem;font-weight:600;
+}
+.sc-del{
+  width:30px;height:30px;
+  background:rgba(255,23,68,0.08);
+  border:1px solid rgba(255,23,68,0.2);
+  color:var(--red);border-radius:8px;
+  cursor:pointer;display:flex;
+  align-items:center;justify-content:center;
+  font-size:0.8rem;transition:all 0.2s;
+}
+.sc-del:active{background:rgba(255,23,68,0.2);}
+
+/* Add stock form */
+.add-form{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:16px;
+  padding:16px;margin-bottom:20px;
+}
+.add-form-title{
+  font-size:0.65rem;color:var(--text2);
+  text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;
+}
+.add-row{display:flex;gap:8px;margin-bottom:10px;}
+.add-input{
+  flex:1;
+  background:var(--surface2);
+  border:1.5px solid var(--border);
+  color:var(--text);
+  padding:11px 14px;border-radius:10px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.85rem;
+  text-transform:uppercase;letter-spacing:1px;
+  transition:border-color 0.2s;
+}
+.add-input:focus{outline:none;border-color:var(--accent);}
+.add-input::placeholder{color:var(--text2);text-transform:none;letter-spacing:0;font-size:0.78rem;}
+.add-btn-main{
+  background:var(--accent);color:#000;
+  border:none;padding:11px 18px;
+  border-radius:10px;
+  font-family:'Rajdhani',sans-serif;
+  font-weight:800;font-size:1.1rem;
+  cursor:pointer;transition:all 0.2s;
+}
+.add-btn-main:active{transform:scale(0.95);}
+.quick-row{display:flex;flex-wrap:wrap;gap:6px;}
+.qtag{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  color:var(--accent);
+  padding:4px 10px;border-radius:20px;
+  font-size:0.68rem;font-weight:600;
+  cursor:pointer;transition:all 0.2s;
+}
+.qtag:active{background:rgba(0,229,255,0.12);}
+
+/* ============================================================
+   NEWS CARDS
+============================================================ */
+.news-list{display:flex;flex-direction:column;gap:10px;}
+
+.news-card{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:14px;
+  padding:14px 14px 12px 18px;
+  position:relative;overflow:hidden;
+  animation:fadeUp 0.35s ease;
+  cursor:pointer;
+  transition:border-color 0.2s,transform 0.15s;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.news-card::before{
+  content:'';position:absolute;
+  left:0;top:0;bottom:0;width:4px;
+  border-radius:4px 0 0 4px;
+}
+.news-card.bullish::before{background:var(--green);}
+.news-card.bearish::before{background:var(--red);}
+.news-card.neutral::before{background:var(--text2);}
+.news-card:active{transform:scale(0.99);border-color:rgba(0,229,255,0.3);}
+
+.nc-top{
+  display:flex;align-items:center;
+  justify-content:space-between;
+  margin-bottom:7px;
+}
+.nc-source{
+  font-size:0.6rem;color:var(--accent);
+  font-weight:600;letter-spacing:0.5px;
+  text-transform:uppercase;
+}
+.nc-time{font-size:0.6rem;color:var(--text2);}
+.nc-title{
+  font-family:'Rajdhani',sans-serif;
+  font-size:0.95rem;font-weight:600;
+  line-height:1.4;margin-bottom:10px;
+}
+.nc-bottom{
+  display:flex;align-items:center;
+  justify-content:space-between;
+}
+.nc-tags{display:flex;gap:4px;flex-wrap:wrap;}
+.nc-tag{
+  background:rgba(0,229,255,0.08);
+  border:1px solid rgba(0,229,255,0.2);
+  color:var(--accent);
+  padding:2px 8px;border-radius:4px;
+  font-size:0.58rem;font-weight:700;letter-spacing:0.5px;
+}
+.nc-sector-tag{
+  background:rgba(124,77,255,0.08);
+  border:1px solid rgba(124,77,255,0.2);
+  color:var(--accent3);
+  padding:2px 8px;border-radius:4px;
+  font-size:0.58rem;font-weight:600;
+}
+.sentiment-badge{
+  display:flex;align-items:center;gap:4px;
+  padding:3px 10px;border-radius:20px;
+  font-size:0.6rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.5px;
+}
+.sentiment-badge.bullish{
+  background:rgba(0,230,118,0.1);
+  border:1px solid rgba(0,230,118,0.25);
+  color:var(--green);
+}
+.sentiment-badge.bearish{
+  background:rgba(255,23,68,0.1);
+  border:1px solid rgba(255,23,68,0.25);
+  color:var(--red);
+}
+.sentiment-badge.neutral{
+  background:rgba(136,153,180,0.1);
+  border:1px solid rgba(136,153,180,0.2);
+  color:var(--text2);
+}
+
+/* News filter pills */
+.filter-row{
+  display:flex;gap:7px;
+  overflow-x:auto;padding-bottom:2px;
+  margin-bottom:14px;
+  scrollbar-width:none;
+}
+.filter-row::-webkit-scrollbar{display:none;}
+.fpill{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  color:var(--text2);
+  padding:6px 14px;border-radius:20px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.68rem;white-space:nowrap;
+  cursor:pointer;flex-shrink:0;
+  transition:all 0.2s;
+}
+.fpill.active{
+  border-color:var(--accent);
+  color:var(--accent);
+  background:rgba(0,229,255,0.07);
+}
+
+/* ============================================================
+   EMPTY STATES
+============================================================ */
+.empty{
+  text-align:center;
+  padding:48px 24px;
+  color:var(--text2);
+}
+.empty-icon{font-size:2.8rem;margin-bottom:14px;opacity:0.4;}
+.empty-title{
+  font-family:'Clash Display',sans-serif;
+  font-size:1rem;color:var(--text);margin-bottom:6px;
+}
+.empty-sub{font-size:0.72rem;line-height:1.6;}
+
+/* ============================================================
+   PROFILE PAGE
+============================================================ */
+.profile-hero{
+  background:linear-gradient(135deg,var(--surface),var(--surface2));
+  border:1.5px solid var(--border);
+  border-radius:20px;
+  padding:24px;
+  display:flex;align-items:center;gap:16px;
+  margin-bottom:20px;
+}
+.avatar{
+  width:56px;height:56px;
+  background:linear-gradient(135deg,var(--accent),var(--accent3));
+  border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;font-weight:700;
+  color:#000;
+  font-family:'Clash Display',sans-serif;
+  flex-shrink:0;
+}
+.profile-name{
+  font-family:'Clash Display',sans-serif;
+  font-size:1.1rem;font-weight:700;
+}
+.profile-email{font-size:0.7rem;color:var(--text2);margin-top:3px;}
+
+.setting-card{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:14px;
+  margin-bottom:8px;
+  overflow:hidden;
+}
+.setting-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;
+  border-bottom:1px solid var(--border);
+}
+.setting-row:last-child{border-bottom:none;}
+.sr-left{display:flex;align-items:center;gap:12px;}
+.sr-icon{
+  width:34px;height:34px;
+  background:var(--surface2);
+  border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;
+}
+.sr-title{
+  font-family:'Rajdhani',sans-serif;
+  font-size:0.9rem;font-weight:600;
+}
+.sr-sub{font-size:0.62rem;color:var(--text2);margin-top:1px;}
+
+/* Toggle switch */
+.toggle-wrap{position:relative;width:42px;height:23px;}
+.toggle-wrap input{opacity:0;width:0;height:0;}
+.tslider{
+  position:absolute;cursor:pointer;
+  inset:0;background:var(--border);
+  border-radius:23px;transition:0.3s;
+}
+.tslider::before{
+  content:'';position:absolute;
+  width:15px;height:15px;
+  left:4px;bottom:4px;
+  background:white;border-radius:50%;transition:0.3s;
+}
+input:checked + .tslider{background:var(--accent);}
+input:checked + .tslider::before{transform:translateX(19px);}
+
+.logout-btn{
+  width:100%;
+  background:rgba(255,23,68,0.08);
+  border:1.5px solid rgba(255,23,68,0.25);
+  color:var(--red);
+  padding:14px;border-radius:12px;
+  font-family:'Rajdhani',sans-serif;
+  font-weight:700;font-size:0.95rem;
+  cursor:pointer;margin-top:12px;
+  transition:all 0.2s;
+}
+.logout-btn:active{background:rgba(255,23,68,0.18);}
+
+/* ============================================================
+   TOAST
+============================================================ */
+.toast{
+  position:fixed;bottom:84px;
+  left:50%;transform:translateX(-50%);
+  background:var(--surface2);
+  border:1.5px solid var(--accent);
+  border-radius:12px;
+  padding:11px 16px;
+  display:flex;align-items:center;gap:10px;
+  z-index:9998;max-width:320px;width:88%;
+  box-shadow:0 8px 32px rgba(0,0,0,0.3);
+  animation:toastIn 0.3s ease,toastOut 0.35s ease 2.8s forwards;
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+@keyframes toastOut{to{opacity:0;transform:translateX(-50%) translateY(10px);}}
+.toast-icon{font-size:1.1rem;}
+.toast-title{font-family:'Rajdhani',sans-serif;font-size:0.82rem;font-weight:700;color:var(--accent);}
+.toast-msg{font-size:0.68rem;color:var(--text2);margin-top:1px;}
+
+/* refresh btn */
+.refresh-btn{
+  display:flex;align-items:center;gap:6px;
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  color:var(--text2);padding:7px 14px;
+  border-radius:20px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:0.68rem;cursor:pointer;
+  transition:all 0.2s;margin-bottom:14px;
+}
+.refresh-btn:active{border-color:var(--accent);color:var(--accent);}
+.spin{animation:spin360 0.8s linear infinite;}
+@keyframes spin360{to{transform:rotate(360deg);}}
+
+/* Sub tabs */
+.sub-tabs{
+  display:flex;gap:6px;margin-bottom:12px;
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:12px;padding:4px;
+}
+.stab{
+  flex:1;padding:8px 4px;
+  border:none;background:none;
+  color:var(--text2);
+  font-family:'Rajdhani',sans-serif;
+  font-size:0.75rem;font-weight:600;
+  border-radius:9px;cursor:pointer;
+  transition:all 0.2s;white-space:nowrap;
+}
+.stab.active{background:var(--accent);color:#000;}
+
+/* Origin badge on news card */
+.nc-origin{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:2px 7px;border-radius:4px;
+  font-size:0.58rem;font-weight:700;
+}
+.nc-origin.port{background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.25);color:var(--accent);}
+.nc-origin.watch{background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.25);color:var(--yellow);}
+.nc-origin.macro{background:rgba(124,77,255,0.1);border:1px solid rgba(124,77,255,0.25);color:var(--accent3);}
+
+/* Suggestion dropdown */
+.sugg-dropdown{
+  position:absolute;top:100%;left:0;right:0;
+  background:var(--bg2);
+  border:1.5px solid var(--accent);
+  border-top:none;
+  border-radius:0 0 12px 12px;
+  z-index:200;
+  max-height:220px;overflow-y:auto;
+  display:none;
+  box-shadow:0 8px 24px rgba(0,0,0,0.3);
+}
+.sugg-dropdown.open{display:block;}
+.sugg-item{
+  padding:11px 14px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  transition:background 0.15s;
+}
+.sugg-item:last-child{border-bottom:none;}
+.sugg-item:active,.sugg-item:hover{background:rgba(0,229,255,0.08);}
+.sugg-sym{
+  font-family:'Rajdhani',sans-serif;
+  font-weight:700;font-size:0.9rem;
+  color:var(--accent);
+}
+.sugg-name{font-size:0.7rem;color:var(--text2);margin-top:1px;}
+.sugg-sector{
+  font-size:0.6rem;color:var(--accent3);
+  background:rgba(124,77,255,0.1);
+  border:1px solid rgba(124,77,255,0.2);
+  padding:2px 8px;border-radius:10px;
+}
+.sugg-loading{
+  padding:12px 14px;font-size:0.75rem;color:var(--text2);
+  display:flex;align-items:center;gap:6px;
+}
+.sugg-error{
+  padding:12px 14px;font-size:0.75rem;color:var(--red);
+  line-height:1.5;cursor:default;
+}
+.sugg-error:hover{background:none !important;}
+.priority-inline{
+  font-size:0.6rem;font-weight:700;letter-spacing:0.03em;
+  padding:2px 7px;border-radius:20px;display:inline-flex;
+  align-items:center;gap:3px;
+}
+.priority-inline.port{background:rgba(0,229,255,0.12);color:var(--accent);border:1px solid rgba(0,229,255,0.2);}
+.priority-inline.watch{background:rgba(255,214,0,0.12);color:var(--yellow);border:1px solid rgba(255,214,0,0.2);}
+.priority-inline.macro{background:rgba(255,80,80,0.12);color:#ff6b6b;border:1px solid rgba(255,80,80,0.2);}
+/* Input error */
+.input-error{
+  font-size:0.72rem;color:var(--red);
+  margin-top:6px;min-height:18px;
+  display:flex;align-items:center;gap:5px;
+}
+
+/* Desktop hover popup for news */
+@media(hover:hover) and (pointer:fine){
+  .news-card{cursor:default;}
+  .news-card .nc-title{cursor:pointer;transition:color 0.2s;}
+  .news-card .nc-title:hover{color:var(--accent);}
+  .desktop-popup{
+    position:fixed;z-index:600;
+    background:var(--bg2);
+    border:1.5px solid var(--border);
+    border-radius:16px;
+    padding:18px;
+    width:310px;
+    box-shadow:0 12px 40px rgba(0,0,0,0.55);
+    pointer-events:all;
+    animation:popIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn{from{opacity:0;transform:scale(0.9);}to{opacity:1;transform:scale(1);}}
+  .dp-source{font-size:0.6rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+  .dp-title{
+    font-family:'Rajdhani',sans-serif;
+    font-size:0.95rem;font-weight:700;line-height:1.4;
+    margin-bottom:8px;cursor:pointer;
+    transition:color 0.2s;
+  }
+  .dp-title:hover{color:var(--accent);text-decoration:underline;}
+  .dp-excerpt{font-size:0.72rem;color:var(--text2);line-height:1.5;margin-bottom:10px;}
+  .dp-bottom{display:flex;align-items:center;justify-content:space-between;}
+  .dp-hint{font-size:0.6rem;color:var(--text2);font-style:italic;}
+}
+.news-modal-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(6,8,16,0.85);
+  backdrop-filter:blur(8px);
+  display:flex;align-items:flex-end;
+  animation:overlayIn 0.25s ease;
+}
+@keyframes overlayIn{from{opacity:0;}to{opacity:1;}}
+.news-modal{
+  width:100%;max-width:480px;
+  margin:0 auto;
+  background:var(--bg2);
+  border:1.5px solid var(--border);
+  border-radius:24px 24px 0 0;
+  padding:12px 20px 40px;
+  max-height:85vh;overflow-y:auto;
+  position:relative;
+  animation:modalUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modalUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 16px;}
+.modal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.modal-source{font-size:0.65rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:1px;}
+.modal-time{font-size:0.65rem;color:var(--text2);}
+.modal-title{font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:700;line-height:1.4;margin-bottom:10px;}
+.modal-excerpt{font-size:0.78rem;color:var(--text2);line-height:1.6;margin-bottom:14px;}
+.modal-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.modal-sentiment{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;border-radius:12px;margin-bottom:16px;
+  font-size:0.78rem;font-weight:600;
+}
+.modal-sentiment.bullish{background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.2);color:var(--green);}
+.modal-sentiment.bearish{background:rgba(255,23,68,0.1);border:1px solid rgba(255,23,68,0.2);color:var(--red);}
+.modal-sentiment.neutral{background:rgba(136,153,180,0.1);border:1px solid var(--border);color:var(--text2);}
+.modal-open-btn{
+  width:100%;
+  background:linear-gradient(135deg,var(--accent),var(--accent3));
+  color:#000;border:none;padding:14px;border-radius:12px;
+  font-family:'Rajdhani',sans-serif;font-weight:700;font-size:0.95rem;
+  cursor:pointer;letter-spacing:0.5px;transition:all 0.2s;
+}
+.modal-close{
+  position:absolute;top:16px;right:16px;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text2);width:32px;height:32px;
+  border-radius:50%;cursor:pointer;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;
+}
+/* News List Popup — shows multiple news cards in a sheet */
+.nlist-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(6,8,16,0.88);
+  backdrop-filter:blur(8px);
+  display:flex;align-items:flex-end;
+  animation:overlayIn 0.25s ease;
+}
+.nlist-sheet{
+  width:100%;max-width:520px;
+  margin:0 auto;
+  background:var(--bg2);
+  border:1.5px solid var(--border);
+  border-radius:24px 24px 0 0;
+  padding:16px 16px 40px;
+  max-height:88vh;overflow-y:auto;
+  animation:modalUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  position:relative;
+}
+.nlist-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;padding-bottom:12px;
+  border-bottom:1px solid var(--border);
+}
+.nlist-title{
+  font-family:'Rajdhani',sans-serif;font-size:1.05rem;font-weight:700;
+  display:flex;align-items:center;gap:8px;
+}
+.nlist-count{
+  font-size:0.65rem;font-weight:700;
+  background:var(--accent);color:#000;
+  padding:2px 8px;border-radius:20px;
+}
+.nlist-empty{
+  text-align:center;padding:40px 20px;
+  color:var(--text2);font-size:0.85rem;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     SPLASH SCREEN
+============================================================ -->
+<div id="splash">
+  <div class="splash-grid"></div>
+  <div class="splash-orb"></div>
+
+  <!-- The unique Pulse Grid icon mark -->
+  <div class="splash-mark">
+    <div class="pulse-grid-icon">
+      <svg viewBox="0 0 88 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer border -->
+        <rect x="2" y="2" width="84" height="84" rx="18" stroke="url(#g1)" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <!-- Pulse/chart line through dots -->
+        <polyline points="10,58 22,58 28,32 36,48 44,24 52,52 58,42 66,42 76,42"
+          stroke="url(#g2)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+          fill="none">
+          <animate attributeName="stroke-dasharray" from="0,200" to="200,0" dur="1.8s" fill="freeze"/>
+        </polyline>
+        <!-- Dot at peak -->
+        <circle cx="44" cy="24" r="4" fill="#00e5ff">
+          <animate attributeName="r" values="4;6;4" dur="1.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <!-- Small dots on line -->
+        <circle cx="28" cy="32" r="2.5" fill="rgba(0,229,255,0.5)"/>
+        <circle cx="52" cy="52" r="2.5" fill="rgba(0,229,255,0.5)"/>
+        <!-- Grid dots background -->
+        <circle cx="22" cy="22" r="1.5" fill="rgba(0,229,255,0.2)"/>
+        <circle cx="44" cy="44" r="1.5" fill="rgba(0,229,255,0.2)"/>
+        <circle cx="66" cy="22" r="1.5" fill="rgba(0,229,255,0.2)"/>
+        <circle cx="66" cy="66" r="1.5" fill="rgba(0,229,255,0.2)"/>
+        <circle cx="22" cy="66" r="1.5" fill="rgba(0,229,255,0.2)"/>
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="88" y2="88" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.5"/>
+            <stop offset="100%" stop-color="#7c4dff" stop-opacity="0.3"/>
+          </linearGradient>
+          <linearGradient id="g2" x1="10" y1="44" x2="76" y2="44" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7c4dff"/>
+            <stop offset="50%" stop-color="#00e5ff"/>
+            <stop offset="100%" stop-color="#7c4dff"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="icon-scan"></div>
+    </div>
+  </div>
+
+  <!-- Wordmark -->
+  <div class="splash-wordmark">
+    <div class="splash-stk">STOCK</div>
+    <div class="splash-pulse-word">PULSE</div>
+  </div>
+
+  <div class="splash-tagline">Track · Sense · React</div>
+  <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+</div>
+
+<!-- ============================================================
+     AUTH SCREEN
+============================================================ -->
+<div id="auth" style="display:none;flex-direction:column;">
+  <div class="auth-header">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">
+        <svg viewBox="0 0 88 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="2" width="84" height="84" rx="18" stroke="url(#ag1)" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <polyline points="10,58 22,58 28,32 36,48 44,24 52,52 58,42 66,42 76,42"
+            stroke="url(#ag2)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="44" cy="24" r="4" fill="#00e5ff"/>
+          <circle cx="28" cy="32" r="2.5" fill="rgba(0,229,255,0.5)"/>
+          <circle cx="52" cy="52" r="2.5" fill="rgba(0,229,255,0.5)"/>
+          <defs>
+            <linearGradient id="ag1" x1="0" y1="0" x2="88" y2="88" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#7c4dff" stop-opacity="0.4"/>
+            </linearGradient>
+            <linearGradient id="ag2" x1="10" y1="44" x2="76" y2="44" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#7c4dff"/>
+              <stop offset="50%" stop-color="#00e5ff"/>
+              <stop offset="100%" stop-color="#7c4dff"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="auth-logo-name">
+        <span class="auth-logo-stk">STOCK</span>
+        <span class="auth-logo-pulse">PULSE</span>
+      </div>
+    </div>
+    <div class="auth-title" id="authTitle">Welcome Back</div>
+    <div class="auth-sub" id="authSub">Sign in to your account</div>
+  </div>
+
+  <div class="auth-tabs">
+    <button class="auth-tab active" onclick="switchTab('login')">Login</button>
+    <button class="auth-tab" onclick="switchTab('signup')">Sign Up</button>
+  </div>
+
+  <div id="nameGroup" class="form-group" style="display:none;">
+    <label class="form-label">Your Name</label>
+    <input class="form-input" id="authName" placeholder="e.g. Rahul" type="text">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Email Address</label>
+    <input class="form-input" id="authEmail" placeholder="yourname@gmail.com" type="email">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Password</label>
+    <input class="form-input" id="authPass" placeholder="Min 6 characters" type="password">
+  </div>
+
+  <button class="auth-btn" id="authBtn" onclick="handleAuth()">LOGIN →</button>
+  <div class="auth-error" id="authError"></div>
+</div>
+
+<!-- ============================================================
+     MAIN APP
+============================================================ -->
+<div id="app">
+  <header class="app-header">
+    <div class="header-logo">
+      <div class="header-logo-icon">
+        <svg viewBox="0 0 88 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="2" width="84" height="84" rx="18" stroke="rgba(0,229,255,0.4)" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <polyline points="10,58 22,58 28,32 36,48 44,24 52,52 58,42 66,42 76,42"
+            stroke="url(#hg1)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="44" cy="24" r="5" fill="#00e5ff"/>
+          <defs>
+            <linearGradient id="hg1" x1="10" y1="44" x2="76" y2="44" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#7c4dff"/>
+              <stop offset="100%" stop-color="#00e5ff"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="header-logo-name">
+        <span class="header-logo-stk">STOCK</span>
+        <span class="header-logo-pulse">PULSE</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+      <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme" id="themeBtn">🌙</button>
+    </div>
+  </header>
+
+  <!-- HOME PAGE -->
+  <div class="page active" id="page-home">
+    <div class="greeting">
+      <div class="greeting-hi">Good <span id="timeGreet">morning</span></div>
+      <div class="greeting-name">Hello, <span id="greetName">Investor</span> 👋</div>
+    </div>
+    <div class="summary-cards">
+      <div class="sum-card c1" onclick="showNewsPopup('portfolio')" style="cursor:pointer" title="Tap to see portfolio news">
+        <div class="sum-label">Portfolio</div><div class="sum-value ca" id="st-port">0</div>
+      </div>
+      <div class="sum-card c2" onclick="showNewsPopup('watchlist')" style="cursor:pointer" title="Tap to see watchlist news">
+        <div class="sum-label">Watchlist</div><div class="sum-value cg" id="st-watch">0</div>
+      </div>
+      <div class="sum-card c3">
+        <div class="sum-label">News Today</div><div class="sum-value co" id="st-news">0</div>
+      </div>
+      <div class="sum-card c4">
+        <div class="sum-label">Bullish</div><div class="sum-value cp" id="st-bull">0</div>
+      </div>
+    </div>
+    <div class="section-head">
+      <div>
+        <div class="section-title">📰 Your News Feed</div>
+        <div style="font-size:0.65rem;color:var(--text2);margin-top:2px" id="refresh-status">Loading news...</div>
+      </div>
+      <button class="see-all" onclick="showNav('overall')">See All →</button>
+    </div>
+    <div class="news-list" id="home-news"></div>
+  </div>
+
+  <!-- PORTFOLIO PAGE -->
+  <div class="page" id="page-portfolio">
+    <div class="add-form">
+      <div class="add-form-title">Add to Portfolio</div>
+      <div class="add-row">
+        <div style="flex:1;position:relative;">
+          <input class="add-input" id="portInput" placeholder="Search stock name or symbol..." maxlength="30"
+            oninput="showSuggestions('portInput','portSugg','portfolio')"
+            onkeydown="handleInputKey(event,'portInput','portSugg','portfolio')"
+            autocomplete="off">
+          <div class="sugg-dropdown" id="portSugg"></div>
+        </div>
+        <button class="add-btn-main" onclick="addStock('portfolio')">+</button>
+      </div>
+      <div class="input-error" id="portError"></div>
+      <div class="quick-row">
+        <span class="qtag" onclick="qAdd('RELIANCE','portfolio')">RELIANCE</span>
+        <span class="qtag" onclick="qAdd('HDFC','portfolio')">HDFC</span>
+        <span class="qtag" onclick="qAdd('SBIN','portfolio')">SBIN</span>
+        <span class="qtag" onclick="qAdd('ICICIBANK','portfolio')">ICICIBANK</span>
+        <span class="qtag" onclick="qAdd('AXISBANK','portfolio')">AXISBANK</span>
+      </div>
+    </div>
+    <div class="section-head">
+      <div class="section-title">My Portfolio (<span id="portCount">0</span>)</div>
+    </div>
+    <div class="stocks-list" id="portList"></div>
+  </div>
+
+  <!-- WATCHLIST PAGE -->
+  <div class="page" id="page-watchlist">
+    <div class="add-form">
+      <div class="add-form-title">Add to Watchlist</div>
+      <div class="add-row">
+        <div style="flex:1;position:relative;">
+          <input class="add-input" id="watchInput" placeholder="Search stock name or symbol..." maxlength="30"
+            oninput="showSuggestions('watchInput','watchSugg','watchlist')"
+            onkeydown="handleInputKey(event,'watchInput','watchSugg','watchlist')"
+            autocomplete="off">
+          <div class="sugg-dropdown" id="watchSugg"></div>
+        </div>
+        <button class="add-btn-main" onclick="addStock('watchlist')">+</button>
+      </div>
+      <div class="input-error" id="watchError"></div>
+      <div class="quick-row">
+        <span class="qtag" onclick="qAdd('TCS','watchlist')">TCS</span>
+        <span class="qtag" onclick="qAdd('INFY','watchlist')">INFY</span>
+        <span class="qtag" onclick="qAdd('WIPRO','watchlist')">WIPRO</span>
+        <span class="qtag" onclick="qAdd('HCLTECH','watchlist')">HCLTECH</span>
+        <span class="qtag" onclick="qAdd('TATAMOTORS','watchlist')">TATAMOTORS</span>
+      </div>
+    </div>
+    <div class="section-head">
+      <div class="section-title">Watchlist (<span id="watchCount">0</span>)</div>
+    </div>
+    <div class="stocks-list" id="watchList"></div>
+  </div>
+
+  <!-- PORTFOLIO NEWS PAGE -->
+  <div class="page" id="page-port-news">
+    <div class="section-head">
+      <div class="section-title">💼 Holdings Radar</div>
+      <button class="refresh-btn" onclick="refreshSection('port-news',this)"><span>↻</span> Refresh</button>
+    </div>
+    <div class="filter-row">
+      <button class="fpill active" onclick="setNF('port-news','all',this)">All</button>
+      <button class="fpill" onclick="setNF('port-news','bullish',this)">📈 Bullish</button>
+      <button class="fpill" onclick="setNF('port-news','bearish',this)">📉 Bearish</button>
+      <button class="fpill" onclick="setNF('port-news','neutral',this)">⬜ Neutral</button>
+      <button class="fpill" onclick="setNF('port-news','macro',this)">🌍 Macro</button>
+    </div>
+    <div class="news-list" id="port-news-list"></div>
+  </div>
+
+  <!-- WATCHLIST NEWS PAGE -->
+  <div class="page" id="page-watch-news">
+    <div class="section-head">
+      <div class="section-title">⭐ Watchlist Pulse</div>
+      <button class="refresh-btn" onclick="refreshSection('watch-news',this)"><span>↻</span> Refresh</button>
+    </div>
+    <div class="filter-row">
+      <button class="fpill active" onclick="setNF('watch-news','all',this)">All</button>
+      <button class="fpill" onclick="setNF('watch-news','bullish',this)">📈 Bullish</button>
+      <button class="fpill" onclick="setNF('watch-news','bearish',this)">📉 Bearish</button>
+      <button class="fpill" onclick="setNF('watch-news','neutral',this)">⬜ Neutral</button>
+      <button class="fpill" onclick="setNF('watch-news','macro',this)">🌍 Macro</button>
+    </div>
+    <div class="news-list" id="watch-news-list"></div>
+  </div>
+
+  <!-- OVERALL NEWS PAGE — 3 sub sections -->
+  <div class="page" id="page-overall">
+    <div class="section-head">
+      <div class="section-title">🌐 Market Feed</div>
+      <button class="refresh-btn" onclick="refreshSection('overall',this)"><span>↻</span> Refresh</button>
+    </div>
+    <!-- 3 sub-section tabs -->
+    <div class="sub-tabs" id="overallTabs">
+      <button class="stab active" onclick="setOverallTab('my',this)">💼 My Stocks</button>
+      <button class="stab" onclick="setOverallTab('global',this)">🌍 Global</button>
+      <button class="stab" onclick="setOverallTab('market',this)">📊 Market</button>
+    </div>
+    <div class="filter-row">
+      <button class="fpill active" onclick="setNF('overall','all',this)">All</button>
+      <button class="fpill" onclick="setNF('overall','bullish',this)">📈 Bullish</button>
+      <button class="fpill" onclick="setNF('overall','bearish',this)">📉 Bearish</button>
+      <button class="fpill" onclick="setNF('overall','neutral',this)">⬜ Neutral</button>
+      <button class="fpill" onclick="setNF('overall','nse',this)">🏛 NSE/BSE</button>
+      <button class="fpill" onclick="setNF('overall','macro',this)">🌍 Macro</button>
+    </div>
+    <div class="news-list" id="overall-list"></div>
+  </div>
+
+  <!-- PROFILE PAGE -->
+  <div class="page" id="page-profile">
+    <div class="profile-hero">
+      <div class="avatar" id="avatarEl">?</div>
+      <div>
+        <div class="profile-name" id="profileName">Investor</div>
+        <div class="profile-email" id="profileEmail">—</div>
+      </div>
+    </div>
+
+    <div class="setting-card">
+      <div class="setting-row">
+        <div class="sr-left">
+          <div class="sr-icon">🌙</div>
+          <div><div class="sr-title">Dark Theme</div><div class="sr-sub">Toggle dark / light mode</div></div>
+        </div>
+        <label class="toggle-wrap">
+          <input type="checkbox" id="themeTog" checked onchange="toggleTheme()">
+          <span class="tslider"></span>
+        </label>
+      </div>
+      <div class="setting-row">
+        <div class="sr-left">
+          <div class="sr-icon">🔔</div>
+          <div><div class="sr-title">Push Notifications</div><div class="sr-sub">Stock & sector alerts</div></div>
+        </div>
+        <label class="toggle-wrap">
+          <input type="checkbox" id="notifTog" onchange="toggleNotif()">
+          <span class="tslider"></span>
+        </label>
+      </div>
+      <div class="setting-row">
+        <div class="sr-left">
+          <div class="sr-icon">🔄</div>
+          <div><div class="sr-title">Auto Refresh</div><div class="sr-sub">Every 6 minutes</div></div>
+        </div>
+        <label class="toggle-wrap">
+          <input type="checkbox" id="autoRefTog" checked onchange="savePref('autoRef',this.checked)">
+          <span class="tslider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="setting-card">
+      <div class="setting-row">
+        <div class="sr-left">
+          <div class="sr-icon">📱</div>
+          <div><div class="sr-title">Add to Home Screen</div><div class="sr-sub">Chrome → Share → Add to Home Screen</div></div>
+        </div>
+        <span style="font-size:0.7rem;color:var(--accent)">→</span>
+      </div>
+      <div class="setting-row">
+        <div class="sr-left">
+          <div class="sr-icon">📊</div>
+          <div><div class="sr-title">Data Stored</div><div class="sr-sub" id="dataInfo">Loading...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">← Logout</button>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav" id="bottomNav" style="display:none;">
+  <button class="nav-btn active" id="nav-home" onclick="showNav('home')">
+    <span class="nav-icon">🏠</span>Home
+  </button>
+  <button class="nav-btn" id="nav-overall" onclick="showNav('overall')">
+    <span class="nav-icon">🌐</span>News
+  </button>
+  <button class="nav-btn" id="nav-portfolio" onclick="showNav('portfolio')">
+    <span class="nav-icon">💼</span>Portfolio
+  </button>
+  <button class="nav-btn" id="nav-watchlist" onclick="showNav('watchlist')">
+    <span class="nav-icon">⭐</span>Watch
+  </button>
+  <button class="nav-btn" id="nav-profile" onclick="showNav('profile')">
+    <span class="nav-icon">👤</span>Profile
+  </button>
+</nav>
+
+<!-- Sub-nav for news pages (shown inside portfolio/watchlist) -->
+
+<script type="module">
+// ================================================================
+// FIREBASE SETUP
+// ================================================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc }
+  from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCfd2Vy6LPVLK0ZfbiLukFpScKBwG3ioMU",
+  authDomain: "stockpulse-fa7a2.firebaseapp.com",
+  projectId: "stockpulse-fa7a2",
+  storageBucket: "stockpulse-fa7a2.firebasestorage.app",
+  messagingSenderId: "709840670678",
+  appId: "1:709840670678:web:e82a8044de433884009e77"
+};
+
+const fbApp  = initializeApp(firebaseConfig);
+const auth   = getAuth(fbApp);
+const db     = getFirestore(fbApp);
+
+// ================================================================
+// REAL NEWS — powered by StockPulse Python backend on Render.com
+// Set BACKEND_URL after you deploy on Render.com (see README)
+// ================================================================
+const BACKEND_URL = 'https://stockpulse-backend-21kf.onrender.com';
+
+// Flag: true once backend URL is configured
+const backendReady = () => BACKEND_URL && !BACKEND_URL.includes('YOUR_RENDER');
+
+// Sentiment scoring (also used locally for cached items)
+const POS_KW=['beat','surge','gain','rise','rally','profit','upgrade','buy','bullish','growth','strong','record','win','deal','dividend','higher','up','crosses','cuts rate','stimulus','jump','soar','boom'];
+const NEG_KW=['fall','drop','decline','loss','miss','downgrade','sell','bearish','weak','probe','fraud','fine','penalty','negative','risk','pressure','warning','lower','drag','war','conflict','escalat','recession','crash','selloff','tumble','slump','plunge'];
+
+function getSentiment(text){
+  const l=text.toLowerCase();
+  let sc=0;
+  POS_KW.forEach(k=>{if(l.includes(k))sc++;});
+  NEG_KW.forEach(k=>{if(l.includes(k))sc--;});
+  return sc>0?'bullish':sc<0?'bearish':'neutral';
+}
+
+// Normalise a backend article to our internal format
+function normaliseArticle(a, overrideOrigin){
+  return {
+    id:        a.id || ('rss-'+Math.random()),
+    title:     a.title || '',
+    excerpt:   a.excerpt || 'Click to read the full article.',
+    url:       a.url || '#',
+    source:    a.source || 'News',
+    sourceKey: a.sourceType || 'india',
+    sentiment: a.sentiment || getSentiment((a.title||'')+(a.excerpt||'')),
+    time:      a.time || Date.now(),
+    isMacro:   a.isMacro || false,
+    origin:    overrideOrigin || a.origin || 'market',
+    stock:     a.stock || 'MARKET',
+    sector:    a.sector || 'India',
+  };
+}
+
+// Check if a news item is relevant to a stock
+function isRelevantTo(newsItem, symbol){
+  const info = ALL_STOCKS_LIST[symbol]||{name:symbol,sector:''};
+  const haystack = (newsItem.title+' '+(newsItem.excerpt||'')).toLowerCase();
+  const symLower = symbol.toLowerCase();
+  const nameWords = info.name.toLowerCase().split(' ').filter(w=>w.length>=4&&!['india','limited','industries','company','corp','ltd'].includes(w));
+  return haystack.includes(symLower) || nameWords.some(w=>haystack.includes(w));
+}
+
+// ── Fetch all news from backend ──────────────────────────────────────
+async function fetchAllRealNews(){
+  if(!backendReady()){
+    showToast('⚙️','Backend Not Set','Open the app file and add your Render.com URL');
+    return false;
+  }
+
+  showToast('📡','Loading News','Fetching from official sources...');
+  try {
+    // Fetch India + Global in parallel
+    const [indiaRes, globalRes] = await Promise.all([
+      fetch(`${BACKEND_URL}/news/india`),
+      fetch(`${BACKEND_URL}/news/global`),
+    ]);
+
+    const indiaData  = indiaRes.ok  ? await indiaRes.json()  : {articles:[]};
+    const globalData = globalRes.ok ? await globalRes.json() : {articles:[]};
+
+    const indiaNews  = (indiaData.articles  || []).map(a=>normaliseArticle(a,'market'));
+    const globalNews = (globalData.articles || []).map(a=>normaliseArticle(a,'macro'));
+    const allNews    = [...indiaNews, ...globalNews].sort((a,b)=>b.time-a.time);
+
+    if(!allNews.length){
+      showToast('⚠️','No News','Backend returned no articles. Try refreshing.');
+      return false;
+    }
+
+    // Match to portfolio
+    if(state.portfolio.length){
+      const matched = allNews.filter(n=>state.portfolio.some(sym=>isRelevantTo(n,sym)));
+      matched.forEach(n=>{
+        n.origin = 'port';
+        n.stock  = state.portfolio.find(sym=>isRelevantTo(n,sym))||'MARKET';
+      });
+      // Keep old news that isn't a placeholder, prepend fresh
+      state.portNews = [...matched, ...state.portNews.filter(n=>n.sourceKey!=='ph')].slice(0,100);
+    }
+
+    // Match to watchlist
+    if(state.watchlist.length){
+      const matched = allNews.filter(n=>state.watchlist.some(sym=>isRelevantTo(n,sym)));
+      matched.forEach(n=>{
+        n.origin = 'watch';
+        n.stock  = state.watchlist.find(sym=>isRelevantTo(n,sym))||'MARKET';
+      });
+      state.watchNews = [...matched, ...state.watchNews.filter(n=>n.sourceKey!=='ph')].slice(0,100);
+    }
+
+    state.overallNews = allNews.slice(0,80);
+    showToast('✅','News Updated',`${allNews.length} real articles loaded`);
+    return true;
+
+  } catch(e){
+    console.error('News fetch error:', e);
+    showToast('⚠️','News Error','Could not reach backend. Check your internet.');
+    return false;
+  }
+}
+
+// ── Fetch news for a specific stock from backend ─────────────────────
+async function fetchStockNews(symbol, origin='port'){
+  const info = ALL_STOCKS_LIST[symbol]||{name:symbol,sector:'Equity'};
+  if(!backendReady()) return makePlaceholderNews(symbol, origin, 2);
+  try {
+    const res  = await fetch(`${BACKEND_URL}/news/stock/${encodeURIComponent(symbol)}?name=${encodeURIComponent(info.name)}`);
+    if(!res.ok) return [];
+    const data = await res.json();
+    return (data.articles||[]).map(a=>normaliseArticle(a, origin));
+  } catch(e){ return []; }
+}
+
+// Placeholder cards shown while real news is loading
+function makePlaceholderNews(symbol, origin, count=2){
+  const info = ALL_STOCKS_LIST[symbol]||{name:symbol,sector:'Equity'};
+  return Array.from({length:count},(_,i)=>({
+    id:`ph-${symbol}-${Date.now()}-${i}`,
+    stock:symbol, sector:info.sector,
+    title:`${info.name} — fetching latest news...`,
+    excerpt:`Real news for ${symbol} is being loaded from Moneycontrol, Economic Times and other sources.`,
+    sentiment:'neutral', source:'Loading...', sourceKey:'ph',
+    time:Date.now()-i*60000, origin, isMacro:false, url:'#',
+  }));
+}
+
+// Keep Render.com awake — pings /health every 10 min (prevents 15-min sleep)
+function keepBackendAwake(){
+  if(!backendReady()) return;
+  setInterval(()=>{
+    fetch(`${BACKEND_URL}/health`).catch(()=>{});
+  }, 10*60*1000);
+}
+keepBackendAwake();
+
+// ================================================================
+// NEWS TEMPLATES — India + Global macro
+// ================================================================
+
+// STATE
+// ================================================================
+const state = {
+  user:null, portfolio:[], watchlist:[],
+  portNews:[], watchNews:[], overallNews:[],
+  filters:{'port-news':'all','watch-news':'all','overall':'all'},
+  overallTab:'my', theme:'dark',
+};
+
+// ================================================================
+// FIREBASE AUTH
+// ================================================================
+let authMode='login';
+
+window.switchTab = function(mode) {
+  authMode=mode;
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&mode==='login')||(i===1&&mode==='signup')));
+  document.getElementById('nameGroup').style.display=mode==='signup'?'block':'none';
+  document.getElementById('authTitle').textContent=mode==='login'?'Welcome Back':'Create Account';
+  document.getElementById('authSub').textContent=mode==='login'?'Sign in to your account':'Start tracking your stocks';
+  document.getElementById('authBtn').textContent=mode==='login'?'LOGIN →':'CREATE ACCOUNT →';
+  document.getElementById('authError').style.display='none';
+};
+
+window.handleAuth = async function() {
+  const email=document.getElementById('authEmail').value.trim();
+  const pass=document.getElementById('authPass').value;
+  const name=document.getElementById('authName')?.value.trim()||'';
+  document.getElementById('authError').style.display='none';
+  if(!email||!pass){showAuthError('Please fill all fields');return;}
+  if(!email.includes('@')){showAuthError('Enter a valid email');return;}
+  if(pass.length<6){showAuthError('Password must be at least 6 characters');return;}
+  document.getElementById('authBtn').textContent='Please wait...';
+  try {
+    if(authMode==='signup'){
+      const cred=await createUserWithEmailAndPassword(auth,email,pass);
+      const displayName=name||email.split('@')[0];
+      await setDoc(doc(db,'users',cred.user.uid),{
+        name:displayName, email, portfolio:[], watchlist:[],
+        portNews:[], watchNews:[], createdAt:Date.now()
+      });
+      showToast('✅','Account Created','Welcome to StockPulse!');
+    } else {
+      await signInWithEmailAndPassword(auth,email,pass);
+    }
+  } catch(e) {
+    const msgs={
+      'auth/user-not-found':'Account not found. Please sign up.',
+      'auth/wrong-password':'Incorrect password.',
+      'auth/email-already-in-use':'Account already exists. Please login.',
+      'auth/invalid-credential':'Invalid email or password.',
+      'auth/too-many-requests':'Too many attempts. Try again later.',
+    };
+    showAuthError(msgs[e.code]||e.message);
+    document.getElementById('authBtn').textContent=authMode==='login'?'LOGIN →':'CREATE ACCOUNT →';
+  }
+};
+
+function showAuthError(msg){
+  const el=document.getElementById('authError');
+  el.textContent=msg;el.style.display='block';
+}
+
+// Auth state listener — runs on every page load
+onAuthStateChanged(auth, async(user)=>{
+  if(user){
+    await loadFirebaseUser(user);
+  } else {
+    document.getElementById('splash').style.display='none';
+    document.getElementById('auth').style.display='flex';
+  }
+});
+
+async function loadFirebaseUser(user) {
+  try {
+    const snap=await getDoc(doc(db,'users',user.uid));
+    if(!snap.exists()){await signOut(auth);return;}
+    const data=snap.data();
+    state.user={...data, uid:user.uid};
+    state.portfolio=data.portfolio||[];
+    state.watchlist=data.watchlist||[];
+    state.portNews=(data.portNews||[]).filter(n=>n.sourceKey!=='ph').map(n=>({...n,sentiment:n.sentiment||getSentiment(n.title)}));
+    state.watchNews=(data.watchNews||[]).filter(n=>n.sourceKey!=='ph').map(n=>({...n,sentiment:n.sentiment||getSentiment(n.title)}));
+
+    // Apply saved theme first so UI looks right
+    const savedTheme=localStorage.getItem('sp_theme')||'dark';
+    state.theme=savedTheme;
+    applyTheme();
+
+    hideSplash();
+    document.getElementById('auth').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('bottomNav').style.display='flex';
+    updateGreeting(); updateProfileUI();
+
+    // Show whatever we have from Firebase first
+    state.overallNews=[];
+    renderAll(); updateStats();
+
+    // Then fetch fresh real news in background
+    fetchAllRealNews().then(ok=>{
+      if(ok){
+        lastRefreshTime = Date.now();
+        refreshCountdown = REFRESH_INTERVAL;
+        renderAll(); updateStats(); saveToFirebase();
+        updateRefreshStatus();
+      } else if(!state.portNews.length && state.portfolio.length){
+        Promise.all(state.portfolio.map(s=>fetchStockNews(s,'port'))).then(results=>{
+          results.forEach(items=>{ state.portNews=[...items,...state.portNews].slice(0,100); });
+          renderAll(); updateStats(); updateRefreshStatus();
+        });
+      }
+    });
+    document.getElementById('bottomNav').style.display='flex';
+    updateGreeting();
+    updateProfileUI();
+    renderAll();
+    updateStats();
+  } catch(e){
+    console.error(e);
+    hideSplash();
+    document.getElementById('auth').style.display='flex';
+  }
+}
+
+function hideSplash(){
+  const s=document.getElementById('splash');
+  s.style.transition='opacity 0.7s ease';
+  s.style.opacity='0';
+  setTimeout(()=>s.style.display='none',700);
+}
+
+async function saveToFirebase(){
+  if(!state.user?.uid) return;
+  try {
+    await updateDoc(doc(db,'users',state.user.uid),{
+      portfolio:state.portfolio,
+      watchlist:state.watchlist,
+      portNews:state.portNews.slice(0,80),
+      watchNews:state.watchNews.slice(0,80),
+    });
+  } catch(e){ console.error('Save error:',e); }
+}
+
+window.logout = async function(){
+  await signOut(auth);
+  state.user=null;state.portfolio=[];state.watchlist=[];
+  state.portNews=[];state.watchNews=[];state.overallNews=[];
+  document.getElementById('app').style.display='none';
+  document.getElementById('bottomNav').style.display='none';
+  document.getElementById('auth').style.display='flex';
+  document.getElementById('authEmail').value='';
+  document.getElementById('authPass').value='';
+  window.switchTab('login');
+};
+
+// ================================================================
+// STOCKS
+// ================================================================
+// ================================================================
+// STOCK SEARCH SUGGESTIONS
+// ================================================================
+// Extended stock list for suggestions
+const ALL_STOCKS_LIST = {
+  "ADANIENT":{name:"Adani Enterprises",sector:"Conglomerate"},
+  "ADANIPORTS":{name:"Adani Ports & SEZ",sector:"Infrastructure"},
+  "APOLLOHOSP":{name:"Apollo Hospitals",sector:"Healthcare"},
+  "ASIANPAINT":{name:"Asian Paints",sector:"Paints"},
+  "AXISBANK":{name:"Axis Bank",sector:"Banking"},
+  "BAJAJ_AUTO":{name:"Bajaj Auto",sector:"Auto"},
+  "BAJFINANCE":{name:"Bajaj Finance",sector:"Finance"},
+  "BAJAJFINSV":{name:"Bajaj Finserv",sector:"Finance"},
+  "BPCL":{name:"Bharat Petroleum Corp",sector:"Energy"},
+  "BHARTIARTL":{name:"Bharti Airtel",sector:"Telecom"},
+  "BRITANNIA":{name:"Britannia Industries",sector:"FMCG"},
+  "CIPLA":{name:"Cipla",sector:"Pharma"},
+  "COALINDIA":{name:"Coal India",sector:"Mining"},
+  "DRREDDY":{name:"Dr. Reddy\'s Laboratories",sector:"Pharma"},
+  "EICHERMOT":{name:"Eicher Motors",sector:"Auto"},
+  "GRASIM":{name:"Grasim Industries",sector:"Cement"},
+  "HCLTECH":{name:"HCL Technologies",sector:"IT"},
+  "HDFCBANK":{name:"HDFC Bank",sector:"Banking"},
+  "HDFCLIFE":{name:"HDFC Life Insurance",sector:"Insurance"},
+  "HEROMOTOCO":{name:"Hero MotoCorp",sector:"Auto"},
+  "HINDALCO":{name:"Hindalco Industries",sector:"Metal"},
+  "HINDUNILVR":{name:"Hindustan Unilever",sector:"FMCG"},
+  "ICICIBANK":{name:"ICICI Bank",sector:"Banking"},
+  "INDUSINDBK":{name:"IndusInd Bank",sector:"Banking"},
+  "INFY":{name:"Infosys",sector:"IT"},
+  "ITC":{name:"ITC",sector:"FMCG"},
+  "JSWSTEEL":{name:"JSW Steel",sector:"Metal"},
+  "KOTAKBANK":{name:"Kotak Mahindra Bank",sector:"Banking"},
+  "LT":{name:"Larsen & Toubro",sector:"Engineering"},
+  "M_M":{name:"Mahindra & Mahindra",sector:"Auto"},
+  "MARUTI":{name:"Maruti Suzuki India",sector:"Auto"},
+  "NESTLEIND":{name:"Nestle India",sector:"FMCG"},
+  "NTPC":{name:"NTPC",sector:"Energy"},
+  "ONGC":{name:"Oil & Natural Gas Corp",sector:"Energy"},
+  "POWERGRID":{name:"Power Grid Corp",sector:"Energy"},
+  "RELIANCE":{name:"Reliance Industries",sector:"Energy"},
+  "SBILIFE":{name:"SBI Life Insurance",sector:"Insurance"},
+  "SBIN":{name:"State Bank of India",sector:"Banking"},
+  "SUNPHARMA":{name:"Sun Pharmaceutical",sector:"Pharma"},
+  "TATACONSUM":{name:"Tata Consumer Products",sector:"FMCG"},
+  "TATAMOTORS":{name:"Tata Motors",sector:"Auto"},
+  "TATASTEEL":{name:"Tata Steel",sector:"Metal"},
+  "TCS":{name:"Tata Consultancy Services",sector:"IT"},
+  "TECHM":{name:"Tech Mahindra",sector:"IT"},
+  "TITAN":{name:"Titan Company",sector:"Jewellery"},
+  "ULTRACEMCO":{name:"UltraTech Cement",sector:"Cement"},
+  "WIPRO":{name:"Wipro",sector:"IT"},
+  "ABB":{name:"ABB India",sector:"Engineering"},
+  "ADANIGREEN":{name:"Adani Green Energy",sector:"Energy"},
+  "AMBUJACEM":{name:"Ambuja Cements",sector:"Cement"},
+  "AUROPHARMA":{name:"Aurobindo Pharma",sector:"Pharma"},
+  "BANDHANBNK":{name:"Bandhan Bank",sector:"Banking"},
+  "BANKBARODA":{name:"Bank of Baroda",sector:"Banking"},
+  "BERGEPAINT":{name:"Berger Paints",sector:"Paints"},
+  "BIOCON":{name:"Biocon",sector:"Biotech"},
+  "BOSCHLTD":{name:"Bosch",sector:"Auto Parts"},
+  "CANBK":{name:"Canara Bank",sector:"Banking"},
+  "COLPAL":{name:"Colgate-Palmolive India",sector:"FMCG"},
+  "DABUR":{name:"Dabur India",sector:"FMCG"},
+  "DLF":{name:"DLF",sector:"Real Estate"},
+  "DMART":{name:"Avenue Supermarts (DMart)",sector:"Retail"},
+  "GODREJCP":{name:"Godrej Consumer Products",sector:"FMCG"},
+  "HAL":{name:"Hindustan Aeronautics (HAL)",sector:"Defence"},
+  "HAVELLS":{name:"Havells India",sector:"Electricals"},
+  "ICICIPRULI":{name:"ICICI Prudential Life",sector:"Insurance"},
+  "INDUSTOWER":{name:"Indus Towers",sector:"Telecom"},
+  "INDIGO":{name:"IndiGo (InterGlobe Aviation)",sector:"Aviation"},
+  "IOC":{name:"Indian Oil Corporation",sector:"Energy"},
+  "IRCTC":{name:"IRCTC (Railway Tourism)",sector:"Travel"},
+  "LUPIN":{name:"Lupin",sector:"Pharma"},
+  "MARICO":{name:"Marico",sector:"FMCG"},
+  "MUTHOOTFIN":{name:"Muthoot Finance",sector:"Finance"},
+  "NAUKRI":{name:"Info Edge (Naukri)",sector:"Internet"},
+  "NMDC":{name:"NMDC",sector:"Mining"},
+  "PAGEIND":{name:"Page Industries (Jockey)",sector:"Textiles"},
+  "PERSISTENT":{name:"Persistent Systems",sector:"IT"},
+  "PIDILITIND":{name:"Pidilite Industries",sector:"Chemicals"},
+  "PIIND":{name:"PI Industries",sector:"Agri-Chemicals"},
+  "PNB":{name:"Punjab National Bank",sector:"Banking"},
+  "RECLTD":{name:"REC Limited",sector:"Finance"},
+  "SAIL":{name:"Steel Authority of India",sector:"Metal"},
+  "SHREECEM":{name:"Shree Cement",sector:"Cement"},
+  "SIEMENS":{name:"Siemens India",sector:"Engineering"},
+  "SRF":{name:"SRF",sector:"Chemicals"},
+  "TORNTPHARM":{name:"Torrent Pharmaceuticals",sector:"Pharma"},
+  "TRENT":{name:"Trent (Westside)",sector:"Retail"},
+  "TVSMOTOR":{name:"TVS Motor Company",sector:"Auto"},
+  "UBL":{name:"United Breweries",sector:"Beverages"},
+  "UPL":{name:"UPL",sector:"Agri-Chemicals"},
+  "VEDL":{name:"Vedanta",sector:"Metal"},
+  "VOLTAS":{name:"Voltas",sector:"Electricals"},
+  "ZOMATO":{name:"Zomato",sector:"Internet"},
+  "FEDERALBNK":{name:"Federal Bank",sector:"Banking"},
+  "IDFCFIRSTB":{name:"IDFC First Bank",sector:"Banking"},
+  "UNIONBANK":{name:"Union Bank of India",sector:"Banking"},
+  "AUBANK":{name:"AU Small Finance Bank",sector:"Banking"},
+  "EQUITASBNK":{name:"Equitas Small Finance Bank",sector:"Banking"},
+  "RBLBANK":{name:"RBL Bank",sector:"Banking"},
+  "YESBANK":{name:"Yes Bank",sector:"Banking"},
+  "IDBI":{name:"IDBI Bank",sector:"Banking"},
+  "HDFCAMC":{name:"HDFC AMC",sector:"Finance"},
+  "CHOLAFIN":{name:"Cholamandalam Finance",sector:"Finance"},
+  "M_MFIN":{name:"Mahindra Finance",sector:"Finance"},
+  "SHRIRAMFIN":{name:"Shriram Finance",sector:"Finance"},
+  "LICHOUSING":{name:"LIC Housing Finance",sector:"Finance"},
+  "PNBHOUSING":{name:"PNB Housing Finance",sector:"Finance"},
+  "CANFINHOME":{name:"Can Fin Homes",sector:"Finance"},
+  "PFC":{name:"Power Finance Corp",sector:"Finance"},
+  "IRFC":{name:"Indian Railway Finance Corp",sector:"Finance"},
+  "HUDCO":{name:"HUDCO",sector:"Finance"},
+  "ABCAPITAL":{name:"Aditya Birla Capital",sector:"Finance"},
+  "MOTILALOFS":{name:"Motilal Oswal Financial",sector:"Finance"},
+  "ANGELONE":{name:"Angel One",sector:"Finance"},
+  "IIFL":{name:"IIFL Finance",sector:"Finance"},
+  "MANAPPURAM":{name:"Manappuram Finance",sector:"Finance"},
+  "PAYTM":{name:"Paytm (One97 Communications)",sector:"Fintech"},
+  "POLICYBZR":{name:"PB Fintech (PolicyBazaar)",sector:"Fintech"},
+  "NYKAA":{name:"Nykaa (FSN E-Commerce)",sector:"Retail"},
+  "DELHIVERY":{name:"Delhivery",sector:"Logistics"},
+  "LTIM":{name:"LTIMindtree",sector:"IT"},
+  "MPHASIS":{name:"Mphasis",sector:"IT"},
+  "COFORGE":{name:"Coforge",sector:"IT"},
+  "KPITTECH":{name:"KPIT Technologies",sector:"IT"},
+  "TATAELXSI":{name:"Tata Elxsi",sector:"IT"},
+  "MASTEK":{name:"Mastek",sector:"IT"},
+  "HAPPSTMNDS":{name:"Happiest Minds Tech",sector:"IT"},
+  "BSOFT":{name:"Birlasoft",sector:"IT"},
+  "TANLA":{name:"Tanla Platforms",sector:"IT"},
+  "NEWGEN":{name:"Newgen Software",sector:"IT"},
+  "INTELLECT":{name:"Intellect Design Arena",sector:"IT"},
+  "OFSS":{name:"Oracle Financial Services",sector:"IT"},
+  "DIVISLAB":{name:"Divi\'s Laboratories",sector:"Pharma"},
+  "ALKEM":{name:"Alkem Laboratories",sector:"Pharma"},
+  "IPCALAB":{name:"IPCA Laboratories",sector:"Pharma"},
+  "GLENMARK":{name:"Glenmark Pharma",sector:"Pharma"},
+  "ABBOTINDIA":{name:"Abbott India",sector:"Pharma"},
+  "PFIZER":{name:"Pfizer India",sector:"Pharma"},
+  "LALPATHLAB":{name:"Dr. Lal PathLabs",sector:"Healthcare"},
+  "METROPOLIS":{name:"Metropolis Healthcare",sector:"Healthcare"},
+  "MAXHEALTH":{name:"Max Healthcare",sector:"Healthcare"},
+  "FORTIS":{name:"Fortis Healthcare",sector:"Healthcare"},
+  "NH":{name:"Narayana Hrudayalaya",sector:"Healthcare"},
+  "AARTIIND":{name:"Aarti Industries",sector:"Chemicals"},
+  "NATCOPHARM":{name:"Natco Pharma",sector:"Pharma"},
+  "GRANULES":{name:"Granules India",sector:"Pharma"},
+  "EXIDEIND":{name:"Exide Industries",sector:"Auto Parts"},
+  "ENDURANCE":{name:"Endurance Technologies",sector:"Auto Parts"},
+  "MOTHERSON":{name:"Samvardhana Motherson",sector:"Auto Parts"},
+  "MINDA":{name:"Minda Industries",sector:"Auto Parts"},
+  "SUNDRMFAST":{name:"Sundram Fasteners",sector:"Auto Parts"},
+  "BALKRISIND":{name:"Balkrishna Industries",sector:"Tyres"},
+  "APOLLOTYRE":{name:"Apollo Tyres",sector:"Tyres"},
+  "CEATLTD":{name:"CEAT",sector:"Tyres"},
+  "MRF":{name:"MRF",sector:"Tyres"},
+  "JKTYRE":{name:"JK Tyre & Industries",sector:"Tyres"},
+  "TATAPOWER":{name:"Tata Power",sector:"Energy"},
+  "TATACHEM":{name:"Tata Chemicals",sector:"Chemicals"},
+  "TATACOMM":{name:"Tata Communications",sector:"Telecom"},
+  "ADANIPOWER":{name:"Adani Power",sector:"Energy"},
+  "CESC":{name:"CESC",sector:"Energy"},
+  "TORNTPOWER":{name:"Torrent Power",sector:"Energy"},
+  "JSWENERGY":{name:"JSW Energy",sector:"Energy"},
+  "GAIL":{name:"GAIL India",sector:"Energy"},
+  "PETRONET":{name:"Petronet LNG",sector:"Energy"},
+  "IGL":{name:"Indraprastha Gas (IGL)",sector:"Energy"},
+  "MGL":{name:"Mahanagar Gas (MGL)",sector:"Energy"},
+  "CONCOR":{name:"Container Corporation (CONCOR)",sector:"Logistics"},
+  "HINDZINC":{name:"Hindustan Zinc",sector:"Metal"},
+  "NATIONALUM":{name:"National Aluminium (NALCO)",sector:"Metal"},
+  "MOIL":{name:"MOIL",sector:"Mining"},
+  "RATNAMANI":{name:"Ratnamani Metals",sector:"Metal"},
+  "WELCORP":{name:"Welspun Corp",sector:"Metal"},
+  "APLAPOLLO":{name:"APL Apollo Tubes",sector:"Metal"},
+  "ACC":{name:"ACC (Adani)",sector:"Cement"},
+  "JKCEMENT":{name:"JK Cement",sector:"Cement"},
+  "RAMCOCEM":{name:"Ramco Cements",sector:"Cement"},
+  "BIRLACORPN":{name:"Birla Corporation",sector:"Cement"},
+  "EMAMILTD":{name:"Emami",sector:"FMCG"},
+  "GODREJIND":{name:"Godrej Industries",sector:"FMCG"},
+  "PGHH":{name:"Procter & Gamble Hygiene",sector:"FMCG"},
+  "BAJAJCON":{name:"Bajaj Consumer Care",sector:"FMCG"},
+  "JYOTHYLAB":{name:"Jyothy Labs",sector:"FMCG"},
+  "VBLINDIA":{name:"Varun Beverages (Pepsi)",sector:"Beverages"},
+  "RADICO":{name:"Radico Khaitan",sector:"Beverages"},
+  "JUBLFOOD":{name:"Jubilant Foodworks (Dominos)",sector:"QSR"},
+  "WESTLIFE":{name:"Westlife Foodworld (McDonald\'s)",sector:"QSR"},
+  "DEVYANI":{name:"Devyani International (KFC)",sector:"QSR"},
+  "ZYDUSWELL":{name:"Zydus Wellness",sector:"FMCG"},
+  "ABFRL":{name:"Aditya Birla Fashion & Retail",sector:"Retail"},
+  "SHOPERSTOP":{name:"Shoppers Stop",sector:"Retail"},
+  "WELSPUNIND":{name:"Welspun India",sector:"Textiles"},
+  "RAYMOND":{name:"Raymond",sector:"Textiles"},
+  "TRIDENT":{name:"Trident",sector:"Textiles"},
+  "ARVIND":{name:"Arvind",sector:"Textiles"},
+  "VARDHMAN":{name:"Vardhman Textiles",sector:"Textiles"},
+  "GODREJPROP":{name:"Godrej Properties",sector:"Real Estate"},
+  "OBEROIRLTY":{name:"Oberoi Realty",sector:"Real Estate"},
+  "PRESTIGE":{name:"Prestige Estates Projects",sector:"Real Estate"},
+  "BRIGADE":{name:"Brigade Enterprises",sector:"Real Estate"},
+  "SOBHA":{name:"Sobha",sector:"Real Estate"},
+  "PHOENIXLTD":{name:"Phoenix Mills",sector:"Real Estate"},
+  "NBCC":{name:"NBCC India",sector:"Real Estate"},
+  "BEL":{name:"Bharat Electronics (BEL)",sector:"Defence"},
+  "BHEL":{name:"Bharat Heavy Electricals (BHEL)",sector:"Engineering"},
+  "BDL":{name:"Bharat Dynamics",sector:"Defence"},
+  "IRCON":{name:"IRCON International",sector:"Infrastructure"},
+  "RITES":{name:"RITES",sector:"Infrastructure"},
+  "BLUEDART":{name:"Blue Dart Express",sector:"Logistics"},
+  "MAHLOG":{name:"Mahindra Logistics",sector:"Logistics"},
+  "VRL":{name:"VRL Logistics",sector:"Logistics"},
+  "STLTECH":{name:"Sterlite Technologies",sector:"Telecom"},
+  "HFCL":{name:"HFCL",sector:"Telecom"},
+  "EIHOTEL":{name:"EIH (Oberoi Hotels)",sector:"Hospitality"},
+  "INDHOTEL":{name:"Indian Hotels (Taj)",sector:"Hospitality"},
+  "LEMON":{name:"Lemon Tree Hotels",sector:"Hospitality"},
+  "THOMASCOOK":{name:"Thomas Cook India",sector:"Travel"},
+  "EASEMYTRIP":{name:"EaseMyTrip",sector:"Travel"},
+  "SUNTV":{name:"Sun TV Network",sector:"Media"},
+  "ZEEL":{name:"Zee Entertainment",sector:"Media"},
+  "PVR":{name:"PVR INOX",sector:"Entertainment"},
+  "SAREGAMA":{name:"Saregama India",sector:"Media"},
+  "KALYANKJIL":{name:"Kalyan Jewellers",sector:"Jewellery"},
+  "TTKPRESTIG":{name:"TTK Prestige",sector:"Consumer Durable"},
+  "CROMPTON":{name:"Crompton Greaves Consumer",sector:"Electricals"},
+  "POLYCAB":{name:"Polycab India",sector:"Electricals"},
+  "FINOLEX":{name:"Finolex Cables",sector:"Electricals"},
+  "KEC":{name:"KEC International",sector:"Engineering"},
+  "KALPATPOWR":{name:"Kalpataru Power",sector:"Engineering"},
+  "THERMAX":{name:"Thermax",sector:"Engineering"},
+  "CUMMINSIND":{name:"Cummins India",sector:"Engineering"},
+  "GRINDWELL":{name:"Grindwell Norton",sector:"Engineering"},
+  "SKFINDIA":{name:"SKF India",sector:"Bearings"},
+  "DIXON":{name:"Dixon Technologies",sector:"Electronics"},
+  "AMBER":{name:"Amber Enterprises India",sector:"Electronics"},
+  "KAYNES":{name:"Kaynes Technology",sector:"Electronics"},
+  "DEEPAKNITRITE":{name:"Deepak Nitrite",sector:"Chemicals"},
+  "GNFC":{name:"Gujarat Narmada Valley Fertilizers",sector:"Chemicals"},
+  "CHAMBLFERT":{name:"Chambal Fertilisers",sector:"Chemicals"},
+  "COROMANDEL":{name:"Coromandel International",sector:"Agri-Chemicals"},
+  "CLEAN":{name:"Clean Science & Technology",sector:"Chemicals"},
+  "FINEORG":{name:"Fine Organic Industries",sector:"Chemicals"},
+  "NOCIL":{name:"NOCIL",sector:"Chemicals"},
+  "VINATI":{name:"Vinati Organics",sector:"Chemicals"},
+  "GALAXYSURF":{name:"Galaxy Surfactants",sector:"Chemicals"},
+  "ASTRAL":{name:"Astral",sector:"Pipes"},
+  "SUPREMEIND":{name:"Supreme Industries",sector:"Plastics"},
+  "ATUL":{name:"Atul",sector:"Chemicals"},
+  "BASF":{name:"BASF India",sector:"Chemicals"},
+  "KRBL":{name:"KRBL (India Gate Rice)",sector:"Agri"},
+  "AVANTIFEED":{name:"Avanti Feeds",sector:"Aquaculture"},
+  "KSCL":{name:"Kaveri Seed Company",sector:"Agri"},
+  "RALLIS":{name:"Rallis India",sector:"Agri-Chemicals"},
+  "DHANUKA":{name:"Dhanuka Agritech",sector:"Agri-Chemicals"},
+  "SUZLON":{name:"Suzlon Energy",sector:"Energy"},
+  "INOXWIND":{name:"Inox Wind",sector:"Energy"},
+  "BALAMINES":{name:"Balaji Amines",sector:"Chemicals"},
+  "ROSSARI":{name:"Rossari Biotech",sector:"Chemicals"},
+  "BALRAMCHIN":{name:"Balrampur Chini Mills",sector:"Sugar"},
+  "RENUKA":{name:"Shree Renuka Sugars",sector:"Sugar"},
+  "DWARIKESH":{name:"Dwarikesh Sugar",sector:"Sugar"},
+  "TRIVENI":{name:"Triveni Engineering",sector:"Sugar"},
+  "EID":{name:"EID Parry",sector:"Sugar"},
+  "DCMSHRIRAM":{name:"DCM Shriram",sector:"Chemicals"},
+  "GHCL":{name:"GHCL",sector:"Chemicals"},
+  "PCBL":{name:"PCBL (Carbon Black)",sector:"Chemicals"},
+  "IIFLSEC":{name:"IIFL Securities",sector:"Finance"},
+  "NUVAMA":{name:"Nuvama Wealth Management",sector:"Finance"},
+  "360ONE":{name:"360 One WAM",sector:"Finance"},
+  "CAMS":{name:"CAMS (Computer Age Mgmt)",sector:"Finance"},
+  "CDSL":{name:"CDSL",sector:"Finance"},
+  "BSE":{name:"BSE (Bombay Stock Exchange)",sector:"Finance"},
+  "MCX":{name:"MCX India",sector:"Finance"},
+  "KFINTECH":{name:"KFin Technologies",sector:"Finance"},
+  "MFSL":{name:"Max Financial Services",sector:"Insurance"},
+  "GICRE":{name:"General Insurance Corp (GIC)",sector:"Insurance"},
+  "NIACL":{name:"New India Assurance",sector:"Insurance"},
+  "STARHEALTH":{name:"Star Health & Allied Insurance",sector:"Insurance"},
+  "GODIGIT":{name:"Go Digit General Insurance",sector:"Insurance"},
+  "PVRINOX":{name:"PVR INOX",sector:"Entertainment"},
+  "SAPPHIREFDS":{name:"Sapphire Foods (KFC/Pizza Hut)",sector:"QSR"},
+  "BURGERKING":{name:"Restaurant Brands Asia (Burger King)",sector:"QSR"},
+  "BARBEQUE":{name:"Barbeque Nation Hospitality",sector:"QSR"},
+  "ZENSARTECH":{name:"Zensar Technologies",sector:"IT"},
+  "ROUTE":{name:"Route Mobile",sector:"IT"},
+  "LATENTVIEW":{name:"Latent View Analytics",sector:"IT"},
+  "DATAMATICS":{name:"Datamatics Global Services",sector:"IT"},
+  "RATEGAIN":{name:"RateGain Travel Technologies",sector:"IT"},
+  "IDEAFORGE":{name:"ideaForge Technology (Drones)",sector:"Defence"},
+  "PARAS":{name:"Paras Defence & Space Tech",sector:"Defence"},
+  "MTAR":{name:"MTAR Technologies",sector:"Defence"},
+  "DYCL":{name:"Dynamic Cables",sector:"Electricals"},
+  "VENUSREM":{name:"Venus Remedies",sector:"Pharma"},
+  "GLAND":{name:"Gland Pharma",sector:"Pharma"},
+  "LAURUS":{name:"Laurus Labs",sector:"Pharma"},
+  "SUVEN":{name:"Suven Pharma",sector:"Pharma"},
+  "SOLARA":{name:"Solara Active Pharma",sector:"Pharma"},
+  "ERIS":{name:"Eris Lifesciences",sector:"Pharma"},
+  "JB":{name:"JB Chemicals & Pharma",sector:"Pharma"},
+  "SANOFI":{name:"Sanofi India",sector:"Pharma"},
+  "CAPLIPOINT":{name:"Caplin Point Laboratories",sector:"Pharma"},
+  "SPARC":{name:"Sun Pharma Advanced Research",sector:"Pharma"},
+  "MEDPLUS":{name:"MedPlus Health Services",sector:"Healthcare"},
+  "VIJAYA":{name:"Vijaya Diagnostic Centre",sector:"Healthcare"},
+  "KRSNAA":{name:"Krsnaa Diagnostics",sector:"Healthcare"},
+  "YATHARTH":{name:"Yatharth Hospital",sector:"Healthcare"},
+  "SYNGENE":{name:"Syngene International",sector:"Healthcare"},
+  "DIVI":{name:"Divi\'s Laboratories",sector:"Pharma"},
+  "ZENTALIS":{name:"Zentalis Pharma (India)",sector:"Pharma"},
+  "OLECTRA":{name:"Olectra Greentech (EV Buses)",sector:"EV"},
+  "GREENPANEL":{name:"Greenpanel Industries",sector:"Consumer Durable"},
+  "CENTURYPLY":{name:"Century Plyboards",sector:"Consumer Durable"},
+  "GREENPLY":{name:"Greenply Industries",sector:"Consumer Durable"},
+  "KITEX":{name:"Kitex Garments",sector:"Textiles"},
+  "GOKEX":{name:"Gokaldas Exports",sector:"Textiles"},
+  "SPTL":{name:"Sintex Plastics Tech",sector:"Plastics"},
+  "JBMA":{name:"JBM Auto",sector:"Auto Parts"},
+  "SUBROS":{name:"Subros",sector:"Auto Parts"},
+  "SUPRAJIT":{name:"Suprajit Engineering",sector:"Auto Parts"},
+  "GABRIEL":{name:"Gabriel India",sector:"Auto Parts"},
+  "MAHINDCIE":{name:"Mahindra CIE Automotive",sector:"Auto Parts"},
+  "FIEM":{name:"Fiem Industries",sector:"Auto Parts"},
+  "VARROC":{name:"Varroc Engineering",sector:"Auto Parts"},
+  "CRAFTSMAN":{name:"Craftsman Automation",sector:"Engineering"},
+  "IFBIND":{name:"IFB Industries",sector:"Consumer Durable"},
+  "ORIENTELEC":{name:"Orient Electric",sector:"Electricals"},
+  "BLUESTAR":{name:"Blue Star",sector:"Electricals"},
+  "LLOYDSENGG":{name:"Lloyd Engineering",sector:"Engineering"},
+  "MINDAIND":{name:"Minda Industries",sector:"Auto Parts"},
+  "SCHAEFFLER":{name:"Schaeffler India",sector:"Auto Parts"},
+  "TIINDIA":{name:"Tube Investments of India",sector:"Engineering"},
+  "SWANENERGY":{name:"Swan Energy",sector:"Textiles"},
+  "WELENT":{name:"Welspun Enterprises",sector:"Infrastructure"},
+  "PNCINFRA":{name:"PNC Infratech",sector:"Infrastructure"},
+  "KNR":{name:"KNR Constructions",sector:"Infrastructure"},
+  "GPPL":{name:"Gujarat Pipavav Port",sector:"Logistics"},
+  "GDL":{name:"Gateway Distriparks",sector:"Logistics"},
+  "TCI":{name:"Transport Corp of India",sector:"Logistics"},
+  "MAHESHWARI":{name:"Maheshwari Logistics",sector:"Logistics"},
+  "AEGISCHEM":{name:"Aegis Logistics",sector:"Logistics"},
+  "ADANIGAS":{name:"Adani Total Gas",sector:"Energy"},
+  "ADANITRANS":{name:"Adani Transmission",sector:"Energy"},
+  "JSPL":{name:"Jindal Steel & Power",sector:"Metal"},
+  "JINDALSTEL":{name:"Jindal Steel & Power",sector:"Metal"},
+  "APARINDS":{name:"Apar Industries",sector:"Electricals"},
+  "EMKAY":{name:"Emkay Global Financial Services",sector:"Finance"},
+  "GEOJIT":{name:"Geojit Financial Services",sector:"Finance"},
+  "PPAP":{name:"PPAP Automotive",sector:"Auto Parts"},
+  "TCIEXP":{name:"TCI Express",sector:"Logistics"},
+  "XPRO":{name:"Xpro India",sector:"Plastics"},
+  "UFLEX":{name:"UFlex",sector:"Packaging"},
+  "MSTC":{name:"MSTC",sector:"Trading"},
+  "MMTC":{name:"MMTC",sector:"Trading"},
+  "SCI":{name:"Shipping Corp of India",sector:"Shipping"},
+  "GE":{name:"GE Power India",sector:"Engineering"},
+  "SUZUKI":{name:"Maruti Suzuki India",sector:"Auto"},
+  "VAIBHAVGBL":{name:"Vaibhav Global",sector:"Retail"},
+  "TIPSINDLTD":{name:"Tips Industries",sector:"Media"},
+};
+
+
+// ================================================================
+// STOCK SEARCH — uses your Render.com backend (reliable, no CORS issues)
+// ================================================================
+let suggDebounce = null;
+
+window.showSuggestions = async function(inputId, suggId, list){
+  const raw      = document.getElementById(inputId).value.trim();
+  const query    = raw.toUpperCase();
+  const dropdown = document.getElementById(suggId);
+  const errId    = list==='portfolio'?'portError':'watchError';
+  document.getElementById(errId).textContent='';
+
+  if(raw.length < 1){ dropdown.classList.remove('open'); dropdown.innerHTML=''; return; }
+
+  dropdown.innerHTML=`<div class="sugg-loading">🔍 Searching NSE/BSE...</div>`;
+  dropdown.classList.add('open');
+
+  clearTimeout(suggDebounce);
+  suggDebounce = setTimeout(async()=>{
+    let found = false;
+
+    // ── Layer 1: Your Render backend /stock/search ────────────────
+    // No CORS issues — searches NSE live from server side
+    try {
+      const res = await fetch(`${BACKEND_URL}/stock/search?q=${encodeURIComponent(raw)}`,
+        {signal: AbortSignal.timeout(5000)});
+      if(res.ok){
+        const data = await res.json();
+        const items = data.results||[];
+        if(items.length){
+          showSuggDropdown(dropdown, items, inputId, suggId, list);
+          found = true;
+        }
+      }
+    } catch(e){}
+
+    // ── Layer 2: Local 350+ stock list (works offline too) ────────
+    if(!found){
+      const localMatches = Object.entries(ALL_STOCKS_LIST)
+        .filter(([sym,info])=>
+          sym.startsWith(query) ||
+          sym.includes(query) ||
+          info.name.toUpperCase().includes(query) ||
+          info.name.toUpperCase().split(' ').some(w=>w.length>2 && w.startsWith(query))
+        )
+        .sort((a,b)=> a[0].startsWith(query)?-1 : b[0].startsWith(query)?1 : 0)
+        .slice(0,8)
+        .map(([sym,info])=>({symbol:sym, name:info.name, exchange:info.sector||'NSE'}));
+
+      if(localMatches.length){
+        showSuggDropdown(dropdown, localMatches, inputId, suggId, list);
+        found = true;
+      }
+    }
+
+    // ── No results found anywhere — show error, NO custom add ─────
+    if(!found){
+      dropdown.innerHTML=`<div class="sugg-error">
+        ❌ "<strong>${raw}</strong>" not found on NSE or BSE.<br>
+        <span>Check spelling or try the full company name.<br>Example: type "Tata Motors" or "WIPRO"</span>
+      </div>`;
+      dropdown.classList.add('open');
+    }
+  }, 300);
+};
+
+function showSuggDropdown(dropdown, items, inputId, suggId, list){
+  dropdown.innerHTML = items.map(item=>{
+    const sym  = (item.symbol||'').replace(/['"]/g,'');
+    const name = (item.name||item.company_name||sym).replace(/['"]/g,'');
+    const exch = item.exchange||item.sector||'NSE';
+    return `<div class="sugg-item" onclick="selectSuggestion('${sym}','${name}','${inputId}','${suggId}','${list}')">
+      <div>
+        <div class="sugg-sym">${sym}</div>
+        <div class="sugg-name">${name}</div>
+      </div>
+      <span class="sugg-sector">${exch}</span>
+    </div>`;
+  }).join('');
+  dropdown.classList.add('open');
+}
+
+window.selectSuggestion = function(sym, name, inputId, suggId, list){
+  document.getElementById(inputId).value = sym;
+  document.getElementById(suggId).classList.remove('open');
+  document.getElementById(suggId).innerHTML='';
+  // Save to local cache so addStock knows it's verified
+  if(!ALL_STOCKS_LIST[sym]) ALL_STOCKS_LIST[sym]={name:name||sym, sector:'Equity'};
+};
+
+window.handleInputKey = function(e, inputId, suggId, list){
+  if(e.key==='Enter'){ window.addStock(list); }
+  if(e.key==='Escape'){ document.getElementById(suggId).classList.remove('open'); }
+};
+
+document.addEventListener('click', e=>{
+  ['portSugg','watchSugg'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && !el.contains(e.target) && e.target.id!==id.replace('Sugg','Input'))
+      el.classList.remove('open');
+  });
+});
+
+window.addStock = async function(list){
+  const inputId = list==='portfolio'?'portInput':'watchInput';
+  const suggId  = list==='portfolio'?'portSugg':'watchSugg';
+  const errId   = list==='portfolio'?'portError':'watchError';
+  const raw     = document.getElementById(inputId).value.trim();
+  const sym     = raw.toUpperCase().replace(/[^A-Z0-9&_-]/g,'');
+
+  document.getElementById(suggId).classList.remove('open');
+  document.getElementById(errId).textContent='';
+
+  if(!sym){
+    document.getElementById(errId).textContent='⚠️ Please search and select a stock from the dropdown';
+    return;
+  }
+
+  // Already verified — user picked from dropdown or it's in local list
+  if(ALL_STOCKS_LIST[sym]){
+    await doAddStock(sym, list, inputId, errId);
+    return;
+  }
+
+  // Not in local list — verify via backend before allowing add
+  document.getElementById(errId).innerHTML=`<span style="color:var(--accent)">⏳ Verifying on NSE/BSE...</span>`;
+
+  try {
+    const res  = await fetch(`${BACKEND_URL}/stock/verify?symbol=${encodeURIComponent(sym)}`,
+      {signal: AbortSignal.timeout(7000)});
+    const data = res.ok ? await res.json() : null;
+
+    if(data && data.valid === true){
+      // Confirmed on NSE/BSE ✅
+      ALL_STOCKS_LIST[sym] = {name: data.name||sym, sector: data.sector||'Equity'};
+      document.getElementById(errId).textContent='';
+      await doAddStock(sym, list, inputId, errId);
+    } else {
+      // Not found on NSE or BSE ❌
+      document.getElementById(errId).innerHTML=
+        `❌ <strong>${sym}</strong> is not listed on NSE or BSE. Please search and pick from the dropdown.`;
+    }
+  } catch(e){
+    document.getElementById(errId).innerHTML=
+      `⚠️ Could not verify <strong>${sym}</strong>. Please search and select from the dropdown list.`;
+  }
+};
+
+async function doAddStock(sym, list, inputId, errId){
+  const arr = list==='portfolio'?state.portfolio:state.watchlist;
+  if(arr.includes(sym)){
+    showToast('⚠️','Already Added', sym+' is already in your '+list);
+    document.getElementById(inputId).value='';
+    return;
+  }
+  arr.push(sym);
+  document.getElementById(inputId).value='';
+  renderStocks(list);
+
+  // Show placeholders immediately while real news loads
+  const placeholder = makePlaceholderNews(sym, list==='portfolio'?'port':'watch', 2);
+  if(list==='portfolio') state.portNews=[...placeholder,...state.portNews];
+  else state.watchNews=[...placeholder,...state.watchNews];
+  renderNewsSection('port-news'); renderNewsSection('watch-news');
+  renderNewsSection('overall'); renderHomeNews(); updateStats();
+  showToast('✅', sym+' Added', 'Fetching real news from official sources...');
+
+  // Fetch real news in background
+  fetchStockNews(sym, list==='portfolio'?'port':'watch').then(async realNews=>{
+    if(realNews.length){
+      if(list==='portfolio'){
+        state.portNews = state.portNews.filter(n=>!(n.stock===sym&&n.sourceKey==='ph'));
+        state.portNews = [...realNews,...state.portNews].slice(0,100);
+      } else {
+        state.watchNews = state.watchNews.filter(n=>!(n.stock===sym&&n.sourceKey==='ph'));
+        state.watchNews = [...realNews,...state.watchNews].slice(0,100);
+      }
+      state.overallNews=[...realNews,...state.overallNews].slice(0,60);
+    }
+    await saveToFirebase();
+    renderNewsSection('port-news'); renderNewsSection('watch-news');
+    renderNewsSection('overall'); renderHomeNews(); updateStats();
+    if(realNews.length) showToast('📰', sym+' News Ready', realNews.length+' real articles loaded');
+  });
+}
+
+window.qAdd = function(sym,list){
+  const inputId=list==='portfolio'?'portInput':'watchInput';
+  const suggId=list==='portfolio'?'portSugg':'watchSugg';
+  document.getElementById(inputId).value=sym;
+  document.getElementById(suggId).classList.remove('open');
+  window.addStock(list);
+};
+
+// ================================================================
+// NEWS LIST POPUP — shows multiple news in a bottom sheet
+// Used by: summary cards on home, stock cards in portfolio/watchlist
+// ================================================================
+function openNewsListSheet(title, icon, newsArr){
+  // Remove any existing popup
+  document.querySelector('.nlist-overlay')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'nlist-overlay';
+  overlay.onclick = e => { if(e.target===overlay) overlay.remove(); };
+
+  const cards = newsArr.length
+    ? newsArr.map(n=>buildNewsCard(n)).join('')
+    : `<div class="nlist-empty">📭 No news found</div>`;
+
+  overlay.innerHTML = `
+    <div class="nlist-sheet">
+      <div class="modal-handle"></div>
+      <div class="nlist-header">
+        <div class="nlist-title">
+          ${icon} ${title}
+          <span class="nlist-count">${newsArr.length}</span>
+        </div>
+        <button class="modal-close" onclick="document.querySelector('.nlist-overlay').remove()">✕</button>
+      </div>
+      <div>${cards}</div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+}
+
+// Called from Home summary cards
+window.showNewsPopup = function(type){
+  if(type==='portfolio'){
+    // EXACT same filter as updateStats uses for st-port
+    const news = state.portNews
+      .filter(n => n.sourceKey!=='ph' && state.portfolio.includes(n.stock))
+      .sort((a,b)=>b.time-a.time);
+    openNewsListSheet('Portfolio News','💼', news);
+  } else if(type==='watchlist'){
+    // EXACT same filter as updateStats uses for st-watch
+    const news = state.watchNews
+      .filter(n => n.sourceKey!=='ph' && state.watchlist.includes(n.stock))
+      .sort((a,b)=>b.time-a.time);
+    openNewsListSheet('Watchlist News','⭐', news);
+  }
+};
+
+// Called from stock cards in Portfolio/Watchlist tab
+window.showStockNewsPopup = function(sym, list){
+  // Only news where stock === this exact symbol
+  const srcArr = list==='portfolio' ? state.portNews : state.watchNews;
+  const stockNews = srcArr
+    .filter(n => n.stock===sym && n.sourceKey!=='ph')
+    .sort((a,b)=>b.time-a.time);
+  const info = ALL_STOCKS_LIST[sym]||{name:sym};
+  openNewsListSheet(info.name||sym, '📰', stockNews);
+};
+
+window.removeStock = async function(sym,list){
+  if(!confirm('Remove '+sym+' from '+list+'?')) return;
+  if(list==='portfolio'){state.portfolio=state.portfolio.filter(s=>s!==sym);state.portNews=state.portNews.filter(n=>n.stock!==sym);}
+  else{state.watchlist=state.watchlist.filter(s=>s!==sym);state.watchNews=state.watchNews.filter(n=>n.stock!==sym);}
+  state.overallNews=state.overallNews.filter(n=>n.stock!==sym);
+  await saveToFirebase();
+  renderStocks(list);renderNewsSection('port-news');
+  renderNewsSection('watch-news');renderNewsSection('overall');
+  updateStats();showToast('🗑️',sym+' Removed','');
+};
+
+function renderStocks(list){
+  const arr=list==='portfolio'?state.portfolio:state.watchlist;
+  const elId=list==='portfolio'?'portList':'watchList';
+  const cntId=list==='portfolio'?'portCount':'watchCount';
+  const newsArr=list==='portfolio'?state.portNews:state.watchNews;
+  document.getElementById(cntId).textContent=arr.length;
+  const el=document.getElementById(elId);
+  if(!arr.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">${list==='portfolio'?'💼':'⭐'}</div><div class="empty-title">No stocks yet</div><div class="empty-sub">Add stocks above to track their news</div></div>`;
+    return;
+  }
+  el.innerHTML=arr.map(sym=>{
+    const info=ALL_STOCKS_LIST[sym]||{name:sym, sector:'Equity'};
+    const cnt=newsArr.filter(n=>n.stock===sym).length;
+    return `<div class="stock-card" onclick="showStockNewsPopup('${sym}','${list}')" style="cursor:pointer">
+      <div class="sc-info">
+        <div class="sc-sym">${sym}</div>
+        <div class="sc-name">${info.name||sym}</div>
+        <span class="sc-sector">${info.sector||'Equity'}</span>
+      </div>
+      <div class="sc-right">
+        <span class="sc-news">${cnt} news</span>
+        <button class="sc-del" onclick="event.stopPropagation();removeStock('${sym}','${list}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ================================================================
+// NEWS RENDERING — with origin badge, emoji-only sentiment
+// ================================================================
+function fmtTime(ts){
+  const d=Date.now()-ts,m=Math.floor(d/60000);
+  if(m<1)return'Just now';if(m<60)return m+'m ago';
+  const h=Math.floor(m/60);if(h<24)return h+'h ago';
+  return Math.floor(h/24)+'d ago';
+}
+
+function sentimentEmoji(s){
+  return s==='bullish'?'📈 Bullish':s==='bearish'?'📉 Bearish':'⬜ Neutral';
+}
+
+function originBadge(n){
+  if(n.isMacro) return `<span class="nc-origin macro">🌍 Global</span>`;
+  if(n.origin==='port') return `<span class="nc-origin port">💼 Portfolio</span>`;
+  if(n.origin==='watch') return `<span class="nc-origin watch">⭐ Watchlist</span>`;
+  return '';
+}
+
+function buildNewsCard(n, priorityLabel=''){
+  const sent=n.sentiment||getSentiment(n.title);
+  const sym=(n.stock||'').trim();
+  const stockTag=sym&&sym!=='MACRO'&&sym!=='MARKET'&&sym!=='undefined'?`<span class="nc-tag">${sym}</span>`:'';
+  const nData=encodeURIComponent(JSON.stringify(n));
+  // If priorityLabel is shown, skip originBadge — they say the same thing
+  const priTag=priorityLabel?`<span class="priority-inline ${priorityLabel.cls}">${priorityLabel.icon} ${priorityLabel.text}</span>`:'';
+  const origin=priorityLabel?'':originBadge(n);
+
+  return `<div class="news-card ${sent}"
+    data-news="${nData}"
+    onclick="handleCardClick(event,this)"
+    onmouseenter="handleCardHover(event,this)"
+    onmouseleave="handleCardLeave(event,this)">
+    <div class="nc-top">
+      <span class="nc-source">${n.source}</span>
+      <span class="nc-time">${fmtTime(n.time)}</span>
+    </div>
+    <div class="nc-title" data-news="${nData}">${n.title}</div>
+    <div class="nc-bottom">
+      <div class="nc-tags">${stockTag}${origin}${priTag}</div>
+      <span class="sentiment-badge ${sent}">${sentimentEmoji(sent)}</span>
+    </div>
+  </div>`;
+}
+
+// Detect if device is touch/mobile
+function isTouchDevice(){
+  return window.matchMedia('(hover:none) and (pointer:coarse)').matches;
+}
+
+// Mobile: tap card → bottom sheet modal
+window.handleCardClick = function(e, card){
+  if(!isTouchDevice()) return; // desktop uses hover
+  const n=JSON.parse(decodeURIComponent(card.dataset.news));
+  openNewsModal(n);
+};
+
+// Desktop: hover card title → side popup
+let hoverTimeout=null;
+window.handleCardHover = function(e, card){
+  if(isTouchDevice()) return;
+  clearTimeout(hoverTimeout);
+  hoverTimeout=setTimeout(()=>{
+    const n=JSON.parse(decodeURIComponent(card.dataset.news));
+    showDesktopPopup(e, card, n);
+  },200);
+};
+
+window.handleCardLeave = function(e, card){
+  if(isTouchDevice()) return;
+  clearTimeout(hoverTimeout);
+  // Delay removal so user can move cursor into popup
+  hoverTimeout=setTimeout(()=>{
+    const p=document.getElementById('desktopPopup');
+    if(p) p.remove();
+  },300);
+};
+
+function showDesktopPopup(e, card, n){
+  document.getElementById('desktopPopup')?.remove();
+  const sent=n.sentiment||getSentiment(n.title);
+  const popup=document.createElement('div');
+  popup.className='desktop-popup';
+  popup.id='desktopPopup';
+  popup.innerHTML=`
+    <div class="dp-source">${n.source} · ${fmtTime(n.time)}</div>
+    <div class="dp-title" onclick="openArticleDirectly('${encodeURIComponent(n.url||'')}','${encodeURIComponent(n.title)}','${encodeURIComponent(n.stock||'')}')" title="Click to open article">${n.title}</div>
+    <div class="dp-excerpt">${n.excerpt}</div>
+    <div class="dp-bottom">
+      <span class="sentiment-badge ${sent}" style="font-size:0.65rem">${sentimentEmoji(sent)}</span>
+      
+    </div>`;
+
+  // Add to DOM first so we can measure it
+  popup.style.visibility='hidden';
+  document.body.appendChild(popup);
+
+  // Get card's position relative to viewport
+  const rect   = card.getBoundingClientRect();
+  const popW   = popup.offsetWidth  || 320;
+  const popH   = popup.offsetHeight || 180;
+  const winW   = window.innerWidth;
+  const winH   = window.innerHeight;
+  const margin = 10;
+
+  // Decide left/right: prefer right of card, fallback to left
+  let left;
+  if(rect.right + popW + margin <= winW){
+    left = rect.right + margin;           // right of card
+  } else if(rect.left - popW - margin >= 0){
+    left = rect.left - popW - margin;     // left of card
+  } else {
+    left = Math.max(margin, winW - popW - margin); // best fit
+  }
+
+  // Decide top: align with card top, but clamp so popup stays on screen
+  let top = rect.top;
+  if(top + popH > winH - margin){
+    top = winH - popH - margin;           // push up if it goes off bottom
+  }
+  top = Math.max(margin, top);            // don't go above screen top
+
+  // Apply position (fixed, so no scrollY needed)
+  popup.style.position='fixed';
+  popup.style.left=left+'px';
+  popup.style.top=top+'px';
+  popup.style.visibility='visible';
+
+  // Keep popup alive when cursor moves into it
+  popup.addEventListener('mouseenter',()=>clearTimeout(hoverTimeout));
+  popup.addEventListener('mouseleave',()=>{
+    hoverTimeout=setTimeout(()=>popup.remove(),200);
+  });
+}
+
+// ================================================================
+// NEWS MODAL — Mobile bottom sheet
+// ================================================================
+window.openNewsModal = function(n){
+  document.getElementById('newsModal')?.remove();
+  const sent=n.sentiment||getSentiment(n.title);
+  const sentLabel=sent==='bullish'?'📈 Bullish Signal':sent==='bearish'?'📉 Bearish Signal':'⬜ Neutral';
+  const overlay=document.createElement('div');
+  overlay.className='news-modal-overlay';
+  overlay.id='newsModal';
+  overlay.innerHTML=`
+    <div class="news-modal">
+      <button class="modal-close" onclick="document.getElementById('newsModal').remove()">✕</button>
+      <div class="modal-handle"></div>
+      <div class="modal-top">
+        <span class="modal-source">${n.source}</span>
+        <span class="modal-time">${fmtTime(n.time)}</span>
+      </div>
+      <div class="modal-title">${n.title}</div>
+      <div class="modal-sentiment ${sent}">${sentLabel}</div>
+      <div class="modal-excerpt">${n.excerpt}</div>
+      <div class="modal-tags">
+        ${(()=>{const s=(n.stock||'').trim();return s&&s!=='MACRO'&&s!=='MARKET'&&s!=='undefined'?`<span class="nc-tag">${s}</span>`:'';})()} 
+        ${originBadge(n)}
+        <span class="nc-sector-tag">${n.sector||'General'}</span>
+      </div>
+      <button class="modal-open-btn" onclick="openArticleFromModal('${encodeURIComponent(n.url||'')}','${encodeURIComponent(n.title)}','${encodeURIComponent(n.stock||'')}')">
+        🔗 Open Full Article →
+      </button>
+    </div>`;
+  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
+  document.body.appendChild(overlay);
+};
+
+// Open article from modal (mobile)
+window.openArticleFromModal = function(encodedUrl, encodedTitle, encodedStock){
+  document.getElementById('newsModal')?.remove();
+  const url=decodeURIComponent(encodedUrl);
+  const title=decodeURIComponent(encodedTitle);
+  const stock=decodeURIComponent(encodedStock);
+  openRealArticle(url, title, stock);
+};
+
+// Open article from desktop popup
+window.openArticleDirectly = function(encodedUrl, encodedTitle, encodedStock){
+  document.getElementById('desktopPopup')?.remove();
+  const url=decodeURIComponent(encodedUrl);
+  const title=decodeURIComponent(encodedTitle);
+  const stock=decodeURIComponent(encodedStock);
+  openRealArticle(url, title, stock);
+};
+
+// Smart article opener — builds real Google News search URL if no direct URL
+function openRealArticle(url, title, stock){
+  if(url && url!=='#' && url.startsWith('http')){
+    window.open(url,'_blank','noopener,noreferrer');
+  } else {
+    // Build a real Google News search for this exact headline
+    const searchQuery=encodeURIComponent((stock&&stock!=='MACRO'&&stock!=='MARKET'?stock+' ':'')+title);
+    const googleNewsUrl=`https://news.google.com/search?q=${searchQuery}&hl=en-IN&gl=IN&ceid=IN:en`;
+    window.open(googleNewsUrl,'_blank','noopener,noreferrer');
+  }
+}
+
+// ================================================================
+// NEWS SECTIONS + OVERALL TAB
+// ================================================================
+let overallTab='my';
+
+window.setOverallTab = function(tab, btn){
+  overallTab=tab;
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNewsSection('overall');
+};
+
+window.setNF = function(section,filter,btn){
+  state.filters[section]=filter;
+  const parent=btn.closest('.filter-row');
+  parent.querySelectorAll('.fpill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNewsSection(section);
+};
+
+function renderNewsSection(section){
+  const filter=state.filters[section]||'all';
+  let news;
+  if(section==='port-news') news=state.portNews;
+  else if(section==='watch-news') news=state.watchNews;
+  else {
+    // Apply overall sub-tab filter
+    if(overallTab==='my') news=state.overallNews.filter(n=>n.origin==='port'||n.origin==='watch');
+    else if(overallTab==='global') news=state.overallNews.filter(n=>n.isMacro||n.sourceKey==='global');
+    else news=state.overallNews.filter(n=>!n.isMacro&&n.origin==='market');
+    if(!news.length) news=state.overallNews; // fallback
+  }
+
+  let filtered=news.filter(n=>{
+    if(filter==='bullish') return n.sentiment==='bullish';
+    if(filter==='bearish') return n.sentiment==='bearish';
+    if(filter==='neutral') return n.sentiment==='neutral';
+    if(filter==='nse') return n.sourceKey==='nse';
+    if(filter==='macro') return n.isMacro;
+    return true;
+  });
+
+  const elId=section==='port-news'?'port-news-list':section==='watch-news'?'watch-news-list':'overall-list';
+  const el=document.getElementById(elId);
+  if(!el) return;
+
+  const noStocks=(section==='port-news'&&!state.portfolio.length)||(section==='watch-news'&&!state.watchlist.length);
+  if(noStocks){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">📡</div><div class="empty-title">No stocks tracked</div><div class="empty-sub">Add stocks to see relevant news here</div></div>`;
+    return;
+  }
+  if(!filtered.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No news found</div><div class="empty-sub">Try a different filter</div></div>`;
+    return;
+  }
+  el.innerHTML=filtered.slice(0,30).map(buildNewsCard).join('');
+}
+
+function renderHomeNews(){
+  const el = document.getElementById('home-news');
+  const seen = new Set();
+
+  function dedup(arr){
+    return arr.filter(n=>{
+      const key = n.title.slice(0,50).toLowerCase();
+      if(seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  // ── P1: Portfolio stock news ─────────────────────────────────
+  // Bearish first (urgent), then by time
+  const p1 = dedup(
+    [...state.portNews]
+      .filter(n => {
+        const s = (n.stock||'').trim();
+        return s && s!=='MARKET' && s!=='MACRO' && s!=='undefined' && n.sourceKey!=='ph';
+      })
+      .sort((a,b)=>{
+        const u={bearish:0, neutral:1, bullish:2};
+        if(u[a.sentiment]!==u[b.sentiment]) return u[a.sentiment]-u[b.sentiment];
+        return b.time-a.time;
+      })
+      .slice(0,15)
+  );
+
+  // ── P2: Watchlist stock news ─────────────────────────────────
+  const p2 = dedup(
+    [...state.watchNews]
+      .filter(n => {
+        const s = (n.stock||'').trim();
+        return s && s!=='MARKET' && s!=='MACRO' && s!=='undefined' && n.sourceKey!=='ph';
+      })
+      .sort((a,b)=> b.time-a.time)
+      .slice(0,10)
+  );
+
+  // ── P3: Very important market alerts ────────────────────────
+  // Wars, rate cuts, RBI decisions, Sensex crash — affect ALL stocks
+  const BIG = [
+    'war','conflict','strike','attack','sanctions',
+    'rate cut','rate hike','rbi cuts','rbi hikes','repo rate',
+    'federal reserve','fed rate','fed cuts','fed hikes',
+    'gdp','recession','market crash','circuit breaker','market halt',
+    'union budget','budget 2','inflation surge','sensex fall','nifty crash',
+    'sebi ban','ipo suspended','fii sell','fii outflow',
+    'crude oil spike','oil price surge','rupee crash','dollar surge',
+    'china slowdown','us recession','global selloff'
+  ];
+  const p3 = dedup(
+    [...state.overallNews, ...state.portNews, ...state.watchNews]
+      .filter(n=>{
+        const txt=(n.title+' '+(n.excerpt||'')).toLowerCase();
+        return BIG.some(k=>txt.includes(k));
+      })
+      .sort((a,b)=>b.time-a.time)
+      .slice(0,8)
+  );
+
+  // ── Combine in strict priority order, cap at 33 ─────────────
+  const combined = [...p1, ...p2, ...p3];
+
+  // If we still have room (under 33), fill with recent India market news
+  if(combined.length < 33){
+    const remaining = 33 - combined.length;
+    const p4 = dedup(
+      [...state.overallNews]
+        .filter(n => n.sourceType==='india' || n.sector==='India')
+        .sort((a,b)=>b.time-a.time)
+        .slice(0, remaining)
+    );
+    combined.push(...p4);
+  }
+
+  const final = combined.slice(0, 33);
+
+  if(!final.length){
+    el.innerHTML=`<div class="empty">
+      <div class="empty-icon">📰</div>
+      <div class="empty-title">No news yet</div>
+      <div class="empty-sub">Add stocks to Portfolio or Watchlist to see relevant news here</div>
+    </div>`;
+    return;
+  }
+
+  // Update subtitle
+  const statusEl = document.getElementById('refresh-status');
+  if(statusEl){
+    const parts=[];
+    if(p1.length) parts.push(`${p1.length} portfolio`);
+    if(p2.length) parts.push(`${p2.length} watchlist`);
+    if(p3.length) parts.push(`${p3.length} alerts`);
+    const rest = final.length - p1.length - p2.length - p3.length;
+    if(rest>0) parts.push(`${rest} market`);
+    const timeStr = lastRefreshTime ? new Date(lastRefreshTime).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : '--';
+    const mins = Math.ceil(refreshCountdown/60);
+    statusEl.textContent = (parts.length?parts.join(' · ')+' · ':'')+`Updated ${timeStr} · Next in ${mins}m`;
+  }
+
+  el.innerHTML = final.map((n,i)=>{
+    let pri = null;
+    if(i < p1.length)
+      pri = {cls:'port', icon:'💼', text:'Portfolio'};
+    else if(i < p1.length+p2.length)
+      pri = {cls:'watch', icon:'⭐', text:'Watchlist'};
+    else if(i < p1.length+p2.length+p3.length)
+      pri = {cls:'macro', icon:'🚨', text:'Alert'};
+    return buildNewsCard(n, pri);
+  }).join('');
+}
+
+function renderAll(){
+  renderStocks('portfolio');renderStocks('watchlist');
+  renderNewsSection('port-news');renderNewsSection('watch-news');
+  renderNewsSection('overall');renderHomeNews();
+}
+
+// ================================================================
+// REFRESH — fetches real news
+// ================================================================
+window.refreshSection = async function(section,btn){
+  const icon=btn.querySelector('span');
+  icon.classList.add('spin'); btn.disabled=true;
+
+  if(section==='port-news'){
+    const results = await Promise.all(state.portfolio.map(s=>fetchStockNews(s,'port')));
+    results.forEach(items=>{ state.portNews=[...items,...state.portNews.filter(n=>n.sourceKey!=='ph')].slice(0,100); });
+  } else if(section==='watch-news'){
+    const results = await Promise.all(state.watchlist.map(s=>fetchStockNews(s,'watch')));
+    results.forEach(items=>{ state.watchNews=[...items,...state.watchNews.filter(n=>n.sourceKey!=='ph')].slice(0,100); });
+  } else {
+    await fetchAllRealNews();
+  }
+
+  await saveToFirebase();
+  renderNewsSection(section); renderHomeNews(); updateStats();
+  icon.classList.remove('spin'); btn.disabled=false;
+  showToast('🔄','Refreshed','Real news updated from official sources');
+};
+
+// ================================================================
+// STATS
+// ================================================================
+function updateStats(){
+  // Count EXACTLY what each popup will show — must match popup filter precisely
+  const portNewsCnt  = state.portNews.filter(n=>n.sourceKey!=='ph' && state.portfolio.includes(n.stock)).length;
+  const watchNewsCnt = state.watchNews.filter(n=>n.sourceKey!=='ph' && state.watchlist.includes(n.stock)).length;
+  document.getElementById('st-port').textContent = portNewsCnt;
+  document.getElementById('st-watch').textContent = watchNewsCnt;
+  const total = portNewsCnt + watchNewsCnt + state.overallNews.length;
+  document.getElementById('st-news').textContent = total;
+  const bull = [...state.portNews,...state.watchNews].filter(n=>n.sentiment==='bullish' && n.sourceKey!=='ph').length;
+  document.getElementById('st-bull').textContent = bull;
+  if(state.user) document.getElementById('dataInfo').textContent=state.portfolio.length+' portfolio · '+state.watchlist.length+' watchlist · Firebase ✅';
+}
+
+// ================================================================
+// NAVIGATION
+// ================================================================
+window.showNav = function(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const pageMap={'port-news':'page-port-news','watch-news':'page-watch-news','overall':'page-overall','home':'page-home','portfolio':'page-portfolio','watchlist':'page-watchlist','profile':'page-profile'};
+  const navMap={'port-news':'nav-portfolio','watch-news':'nav-watchlist','overall':'nav-overall','home':'nav-home','portfolio':'nav-portfolio','watchlist':'nav-watchlist','profile':'nav-profile'};
+  document.getElementById(pageMap[name]||'page-home')?.classList.add('active');
+  document.getElementById(navMap[name]||'nav-home')?.classList.add('active');
+};
+
+// ================================================================
+// THEME
+// ================================================================
+function applyTheme(){
+  const isDark=state.theme==='dark';
+  document.body.classList.toggle('light',!isDark);
+  const btn=document.getElementById('themeBtn');
+  const tog=document.getElementById('themeTog');
+  if(btn) btn.textContent=isDark?'🌙':'☀️';
+  if(tog) tog.checked=isDark;
+}
+
+window.toggleTheme = function(){
+  state.theme=state.theme==='dark'?'light':'dark';
+  applyTheme();
+  localStorage.setItem('sp_theme',state.theme);
+};
+
+window.savePref = function(key,val){
+  const p=JSON.parse(localStorage.getItem('sp_prefs')||'{}');
+  p[key]=val;localStorage.setItem('sp_prefs',JSON.stringify(p));
+};
+
+// ================================================================
+// NOTIFICATIONS — stock + sector + macro events (Change 3)
+// ================================================================
+window.toggleNotif = function(){
+  const cb=document.getElementById('notifTog');
+  if(cb.checked){
+    if('Notification' in window){
+      Notification.requestPermission().then(p=>{
+        if(p==='granted'){window.savePref('notif',true);showToast('🔔','Notifications ON','Alerts for stocks, sectors & global events');}
+        else{cb.checked=false;showToast('⚠️','Permission Denied','Allow notifications in browser settings');}
+      });
+    }
+  } else {window.savePref('notif',false);showToast('🔕','Notifications OFF','');}
+};
+
+function maybeNotify(n){
+  const prefs=JSON.parse(localStorage.getItem('sp_prefs')||'{}');
+  if(!prefs.notif||Notification.permission!=='granted') return;
+  const emoji=n.sentiment==='bullish'?'📈':n.sentiment==='bearish'?'📉':'📰';
+  const title=n.isMacro?`StockPulse 🌍 Global Alert`:`StockPulse — ${n.stock}`;
+  new Notification(title,{body:emoji+' '+n.title,icon:'/favicon.ico'});
+}
+
+// ================================================================
+// PROFILE
+// ================================================================
+function updateProfileUI(){
+  if(!state.user) return;
+  const name=state.user.name||state.user.email.split('@')[0];
+  document.getElementById('profileName').textContent=name;
+  document.getElementById('profileEmail').textContent=state.user.email;
+  document.getElementById('avatarEl').textContent=name[0].toUpperCase();
+  document.getElementById('greetName').textContent=name.split(' ')[0];
+}
+
+function updateGreeting(){
+  const h=new Date().getHours();
+  document.getElementById('timeGreet').textContent=h<12?'morning':h<17?'afternoon':'evening';
+}
+
+// ================================================================
+// TOAST
+// ================================================================
+window.showToast = function(icon,title,msg){
+  document.querySelector('.toast')?.remove();
+  const t=document.createElement('div');
+  t.className='toast';
+  t.innerHTML=`<div class="toast-icon">${icon}</div><div><div class="toast-title">${title}</div>${msg?`<div class="toast-msg">${msg}</div>`:''}</div>`;
+  document.body.appendChild(t);
+  setTimeout(()=>{if(t.parentNode)t.remove();},3200);
+};
+function showToast(i,t,m){window.showToast(i,t,m);}
+
+// ================================================================
+// AUTO REFRESH — every 6 minutes, real RSS feeds
+// ================================================================
+const REFRESH_INTERVAL = 6 * 60; // seconds
+let refreshCountdown = REFRESH_INTERVAL;
+let lastRefreshTime  = Date.now();
+
+function updateRefreshStatus(fetching=false){
+  const el = document.getElementById('refresh-status');
+  if(!el) return;
+  if(fetching){
+    el.textContent = '⟳ Refreshing news...';
+    return;
+  }
+  const mins = Math.ceil(refreshCountdown / 60);
+  const timeStr = new Date(lastRefreshTime).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  const portCnt = state.portNews.filter(n=>n.sourceKey!=='ph').length;
+  const watchCnt = state.watchNews.filter(n=>n.sourceKey!=='ph').length;
+  const parts = [];
+  if(portCnt)  parts.push(`${portCnt} portfolio`);
+  if(watchCnt) parts.push(`${watchCnt} watchlist`);
+  if(state.overallNews.length) parts.push(`${state.overallNews.length} market`);
+  const summary = parts.join(' · ');
+  el.textContent = `${summary ? summary+' · ' : ''}Updated ${timeStr} · Next in ${mins}m`;
+}
+
+// Countdown tick every 30 seconds
+setInterval(()=>{
+  if(!state.user) return;
+  refreshCountdown = Math.max(0, refreshCountdown - 30);
+  updateRefreshStatus();
+}, 30000);
+
+// Main refresh every 6 minutes
+setInterval(async()=>{
+  const prefs=JSON.parse(localStorage.getItem('sp_prefs')||'{}');
+  if(prefs.autoRef===false||!state.user) return;
+  updateRefreshStatus(true);
+  const ok = await fetchAllRealNews();
+  if(ok){
+    refreshCountdown = REFRESH_INTERVAL;
+    lastRefreshTime  = Date.now();
+    const recent=[...state.portNews,...state.watchNews]
+      .filter(n=>Date.now()-n.time < 7*60*1000 && n.sentiment!=='neutral');
+    if(recent.length) maybeNotify(recent[0]);
+    await saveToFirebase();
+    renderAll(); updateStats();
+  }
+  updateRefreshStatus();
+}, REFRESH_INTERVAL * 1000);
+
+// ================================================================
+// SPLASH — show until auth state resolves
+// ================================================================
+window.addEventListener('load',()=>{
+  // Splash stays visible until onAuthStateChanged fires
+  setTimeout(()=>{
+    // If auth hasn't resolved in 5s, show login
+    if(document.getElementById('splash').style.display!=='none'){
+      hideSplash();
+      document.getElementById('auth').style.display='flex';
+    }
+  },5000);
+});
+</script>
+</body>
+</html>
