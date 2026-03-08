@@ -201,6 +201,17 @@ body{
 }
 @keyframes loadBar{0%{width:0%;}100%{width:100%;}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.splash-dev{
+  position:absolute;bottom:18px;
+  font-size:0.58rem;
+  color:rgba(136,153,180,0.45);
+  letter-spacing:1.5px;
+  font-family:'IBM Plex Mono',monospace;
+  z-index:2;
+  opacity:0;
+  animation:fadeIn 0.6s ease 2s forwards;
+}
+.splash-dev strong{color:rgba(0,229,255,0.6);font-weight:600;}
 /* letter animation kept for compat */
 .splash-name span{display:inline-block;opacity:0;transform:translateY(20px);animation:letterUp 0.5s ease forwards;}
 @keyframes letterUp{to{opacity:1;transform:translateY(0);}}
@@ -1115,6 +1126,7 @@ input:checked + .tslider::before{transform:translateX(19px);}
 
   <div class="splash-tagline">Track · Sense · React</div>
   <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+  <div class="splash-dev">Crafted by <strong>Jana</strong></div>
 </div>
 
 <!-- ============================================================
@@ -1405,6 +1417,15 @@ input:checked + .tslider::before{transform:translateX(19px);}
           <div class="sr-icon">📊</div>
           <div><div class="sr-title">Data Stored</div><div class="sr-sub" id="dataInfo">Loading...</div></div>
         </div>
+      </div>
+    </div>
+
+    <div class="setting-card" style="margin-top:8px;">
+      <div style="padding:16px;text-align:center;">
+        <div style="font-size:0.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--text2);font-family:'IBM Plex Mono',monospace;margin-bottom:10px;">Developed by</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:1.5rem;font-weight:700;background:linear-gradient(90deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:1px;">Jana</div>
+        <div style="font-size:0.62rem;color:var(--text2);margin-top:6px;font-family:'IBM Plex Mono',monospace;">StockPulse · Personal Edition</div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:0.6rem;color:var(--text2);opacity:0.6;">Track · Sense · React</div>
       </div>
     </div>
 
@@ -2514,7 +2535,7 @@ function showMobilePopup(n){
   const popup = document.createElement('div');
   popup.id = 'mobilePopup';
   popup.className = 'desktop-popup';
-  popup.style.cssText = 'left:50%;top:50%;transform:translate(-50%,-50%);width:min(320px,calc(100vw - 32px));cursor:pointer;';
+  popup.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(320px,calc(100vw - 32px));cursor:pointer;';
   popup.innerHTML = `
     <div class="dp-source">${n.source} · ${fmtTime(n.time)}</div>
     <div class="dp-title">${n.title}</div>
